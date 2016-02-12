@@ -1,0 +1,84 @@
+// cfsadmin proto file
+// protoc --go_out=plugins=grpc:. *.proto
+
+
+syntax = 'proto3';
+
+package account;
+
+// Message service definition for the AccountApi
+service AccountApi {
+  rpc CreateAcct (CreateAcctRequest) returns (CreateAcctResponse) {}
+  rpc ListAcct  (ShowAcctRequest) returns (ShowAcctResponse) {}
+  rpc ShowAcct (ShowAcctRequest) returns (ShowAcctResponse) {}
+  rpc DeleteAcct(DeleteAcctRequest) returns (DeleteAcctResponse) {}
+  rpc UpdateAcct(UpdateAcctRequest) returns (UpdateAcctResponse) {}
+}
+
+// Account Profile
+message Account {
+  string    id            = 1;
+  string    name          = 2;
+  string    apikey        = 3;
+  string    status        = 4;
+  int64     createDate    = 5;
+  int64     deleteDate    = 6;
+}
+
+// Request to Create an account
+message CreateAcctRequest {
+  string    acct          = 1;
+  string    superkey      = 2;
+}
+
+// Response for account Create results
+message CreateAcctResponse {
+  string    status        = 1;
+}
+
+// Request to show an account
+message ListAcctRequest {
+  string    superkey      = 1;
+}
+
+// Response for account Show results
+message ListAcctResponse {
+  repeated  Account   account       = 1;
+  string              status        = 2;
+}
+
+// Request to show an account
+message ShowAcctRequest {
+  string    acct          = 1;
+  string    superkey      = 2;
+}
+
+// Response for account Show results
+message ShowAcctResponse {
+  Account   account       = 1;
+  string    status        = 2;
+}
+
+// Request to Delete account
+message DeleteAcctRequest {
+  string    acct          = 1;
+  string    superkey      = 2;
+}
+
+// Response for account Delete results
+message DeleteAcctResponse {
+  string    status        = 1;
+}
+
+// Request to Update account's api key
+message UpdateAcctRequest {
+  string    acct          = 1;
+  string    superkey      = 2;
+  string    newapikey     = 3;
+}
+
+// Response for account Update results
+message UpdateAcctResponse {
+  Account   account       = 1;
+  string    status        = 2;
+}
