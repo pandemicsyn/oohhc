@@ -1,0 +1,137 @@
+// cfsmanage proto file
+// protoc --go_out=plugins=grpc:. *.proto
+
+
+syntax = 'proto3';
+
+package filesystem;
+
+// Message service definition for the FileSystemApi
+service FileSystemApi {
+  rpc CreateFS (CreateFSRequest) returns (CreateFSResponse) {}
+  rpc ListFS (ListFSRequest) returns (ListFSResponse) {}
+  rpc ShowFS (ShowFSRequest) returns (ShowFSResponse) {}
+  rpc DeleteFS (DeleteFSRequest) returns (DeleteFSResponse) {}
+  rpc UpdateFS (UpdateFSRequest) returns (UpdateFSResponse) {}
+  rpc GrantAddrFS (GrantAddrFSRequest) returns (GrantAddrFSResponse) {}
+  rpc RevokeAddrFS (RevokeAddrFSRequest) returns (RevokeAddrFSResponse) {}
+  rpc ValidiateAddrFS (ValidateAddrFSRequest) returns (ValidateAddrFSResponse) {}
+}
+
+// FileSystem Profile
+message FileSystem {
+  string  id              = 1;
+  string  name            = 2;
+  string  status          = 3;
+  int64   createDate      = 4;
+  int64   deleteDate      = 5;
+}
+
+// IP Address Profile
+message IPAddress {
+  string  addr            = 1;
+}
+
+// Request to create a new filesystem
+message CreateFSRequest {
+  string  acct            = 1;
+  string  filesys         = 2;
+  string  apikey          = 3;
+  string  address         = 4;
+}
+
+// Response from creating a new filesystem
+message CreateFSResponse {
+  string  status         = 1;
+}
+
+// Request a list of all file systems for a
+// given account
+message ListFSRequest{
+  string acct            = 1;
+  string apikey          = 2;
+}
+
+// Response from showing either an accounts specific
+// file system or a list of all an accounts file systems.
+message ListFSResponse {
+  FileSystem      filesystems      = 1;
+  string          status           = 2;
+}
+
+// Request to show the specific details about a file system
+message ShowFSRequest{
+  string acct            = 1;
+  string filesys         = 2;
+  string apikey          = 3;
+}
+
+// Response from showing either an accounts specific
+// file system or a list of all an accounts file systems.
+message ShowFSResponse {
+  FileSystem            filesystems      = 1;
+  repeated IPAddress    ipaddresses      = 2;
+  string                status           = 3;
+}
+
+// Request to delete a specific file system
+message DeleteFSRequest {
+  string acct            = 1;
+  string filesys         = 2;
+  string apikey          = 3;
+}
+
+// Response from deleting a file system
+message DeleteFSResponse {
+  string status          = 1;
+}
+
+// Request to update a specific file system's information
+message UpdateFSRequest {
+  string        acct            = 1;
+  string        filesys         = 2;
+  string        apikey          = 3;
+  FileSystem    filesystem      = 4;
+}
+
+// Response from an update operation
+message UpdateFSResponse {
+  string    status        = 1;
+}
+
+// Request grant an ip address access to a file system
+message GrantAddrFSRequest {
+    string acct            = 1;
+    string filesys         = 2;
+    string apikey          = 3;
+    string ipaddress       = 4;
+}
+
+// Response from granting ip address access to a file system
+message GrantAddrFSResponse {
+  string status           = 1;
+}
+
+// Request revoke an ip address access to a file system
+message RevokeAddrFSRequest {
+    string acct            = 1;
+    string filesys         = 2;
+    string apikey          = 3;
+    string ipaddress       = 4;
+}
+
+// Response from revoking ip address access to a file system
+message RevokeAddrFSResponse {
+  string status           = 1;
+}
+
+// Request to validate an addr has access to a file system
+message ValidateAddrFSRequest {
+    string      acct        = 1;
+    string      filesys     = 2;
+    IPAddress   addr        = 3;
+}
+// Response from validating an addr has access to a file system
+message ValidateAddrFSResponse {
+    string      status      = 1;
+}
