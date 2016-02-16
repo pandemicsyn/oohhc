@@ -22,7 +22,7 @@ var (
 	usetls             = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
 	certFile           = flag.String("cert_file", "/etc/oort/server.crt", "The TLS cert file")
 	keyFile            = flag.String("key_file", "/etc/oort/server.key", "The TLS key file")
-	port               = flag.Int("port", 9443, "The server port")
+	port               = flag.Int("port", 8449, "The server port")
 	oortGroupHost      = flag.String("oortgrouphost", "127.0.0.1:6380", "host:port to use when connecting to oort group")
 	insecureSkipVerify = flag.Bool("skipverify", true, "don't verify cert")
 	superUserKey       = flag.String("superkey", "123456789", "Super User key used for authentication")

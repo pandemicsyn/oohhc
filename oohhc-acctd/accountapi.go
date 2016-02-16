@@ -98,7 +98,7 @@ func (s *AccountAPIServer) UpdateAcct(ctx context.Context, r *mb.UpdateAcctReque
 	var status string
 	// validate superapikey
 	if r.Superkey != s.acctws.superKey {
-		return &mb.UpdateAcctResponse{Status: "Invalid Credintials"}, errors.New("Permission Denied")
+		return &mb.UpdateAcctResponse{Account: nil, Status: "Invalid Credintials"}, errors.New("Permission Denied")
 	}
 	// validate account string
 	// pull the account information
@@ -106,5 +106,5 @@ func (s *AccountAPIServer) UpdateAcct(ctx context.Context, r *mb.UpdateAcctReque
 	// write new information to the group store
 
 	status = "OK"
-	return &mb.UpdateAcctResponse{Status: status}, nil
+	return &mb.UpdateAcctResponse{Account: nil, Status: status}, nil
 }

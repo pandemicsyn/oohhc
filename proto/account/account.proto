@@ -25,6 +25,14 @@ message Account {
   int64     deleteDate    = 6;
 }
 
+// Values that can be changed on an account 
+message ModAccount {
+  string    name         = 1;
+  string    apikey       = 2;
+  string    status       = 3;
+  int64     deletedate   = 4;
+}
+
 // Request to Create an account
 message CreateAcctRequest {
   string    acct          = 1;
@@ -72,9 +80,9 @@ message DeleteAcctResponse {
 
 // Request to Update account's api key
 message UpdateAcctRequest {
-  string    acct          = 1;
-  string    superkey      = 2;
-  string    newapikey     = 3;
+  string        acct          = 1;
+  string        superkey      = 2;
+  ModAccount    modAcct       = 3;
 }
 
 // Response for account Update results
