@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
+	"time"
 
 	mb "github.com/letterj/oohhc/proto/account"
 	"github.com/satori/go.uuid"
@@ -37,11 +39,18 @@ func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctReque
 	// Value:   { "id": "uuid", "name": "name", "apikey": "12345",
 	//            "status": "active", "createdate": <timestamp>,
 	//            "deletedate": <timestamp> }
-	acctid := uuid.NewV4()
+	group := "/acct"
+	member := uuid.NewV4().String()
+	details := fmt.Sprintf(`{"id": %s, "name": %s, "token": %s, "status": %s, "createdate": %d, "deletedate": %d}`, member, r.Acct, "active", uuid.NewV4().String(), time.Now().Unix(), 0)
 
 	// write information into the group store
-
-	status = fmt.Sprintf("account %s was created with id %s", r.Acct, acctid.String())
+	result, err := s.acctws.writeGStore(group, member, details)
+	if err != nil {
+		status = fmt.Sprintf("account %s was not created", r.Acct)
+		return &mb.CreateAcctResponse{Status: status}, err
+	}
+	log.Println(result)
+	status = fmt.Sprintf("account %s was created with id %s", r.Acct, member)
 	return &mb.CreateAcctResponse{Status: status}, nil
 }
 
