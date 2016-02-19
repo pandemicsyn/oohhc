@@ -102,5 +102,13 @@ func (aws *AccountWS) getGStore(groupVal string, memberVal string) (string, erro
 		aws.getGClient()
 	}
 	// TODO:
-	return "OK", nil
+	r := &gp.ReadRequest{}
+	r.KeyA, r.KeyB = murmur3.Sum128([]byte(groupVal))
+	r.NameKeyA, r.NameKeyB = murmur3.Sum128([]byte(memberVal))
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	res, err := aws.gc.Read(ctx, r)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`{"TSM": %d, "VALUE": "%s"`, res.Tsm, res.Value), nil
 }

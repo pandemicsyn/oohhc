@@ -41,7 +41,10 @@ func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctReque
 	//            "deletedate": <timestamp> }
 	group := "/acct"
 	member := uuid.NewV4().String()
-	details := fmt.Sprintf(`{"id": %s, "name": %s, "token": %s, "status": %s, "createdate": %d, "deletedate": %d}`, member, r.Acct, "active", uuid.NewV4().String(), time.Now().Unix(), 0)
+	token := uuid.NewV4().String()
+	createDate := time.Now().Unix()
+	deleteDate := 0
+	details := fmt.Sprintf(`{"id": %s, "name": %s, "token": %s, "status": %s, "createdate": %d, "deletedate": %d}`, member, r.Acct, token, "active", createDate, deleteDate)
 
 	// write information into the group store
 	result, err := s.acctws.writeGStore(group, member, details)
@@ -66,7 +69,7 @@ func (s *AccountAPIServer) ListAcct(ctx context.Context, r *mb.ListAcctRequest) 
 
 	// get information from the group store
 
-	status = "OK"
+	status = "TODO"
 	return &mb.ListAcctResponse{Account: nil, Status: status}, nil
 }
 
@@ -78,11 +81,21 @@ func (s *AccountAPIServer) ShowAcct(ctx context.Context, r *mb.ShowAcctRequest) 
 		return &mb.ShowAcctResponse{Account: nil, Status: "Invalid Credintials"}, errors.New("Permission Denied")
 	}
 	// validate account string
+
 	// build the group store request
+	group := "/acct"
+	member := r.Acct
+	fmt.Println("group", group)
+	fmt.Println("member", member)
 
-	// get information from the group store
-
-	status = "OK"
+	// try and get account details form the group store
+	result, err := s.acctws.getGStore(group, member)
+	if err != nil {
+		status = fmt.Sprintf("account %s was not found", r.Acct)
+		return &mb.ShowAcctResponse{Account: nil, Status: status}, err
+	}
+	log.Println(result)
+	status = fmt.Sprintf("account %s was found with id %s and values of %s", r.Acct, member, result)
 	return &mb.ShowAcctResponse{Account: nil, Status: status}, nil
 }
 
@@ -98,7 +111,7 @@ func (s *AccountAPIServer) DeleteAcct(ctx context.Context, r *mb.DeleteAcctReque
 
 	// send delete to the group store
 
-	status = "OK"
+	status = "TODO a delete"
 	return &mb.DeleteAcctResponse{Status: status}, nil
 }
 
@@ -114,6 +127,6 @@ func (s *AccountAPIServer) UpdateAcct(ctx context.Context, r *mb.UpdateAcctReque
 
 	// write new information to the group store
 
-	status = "OK"
+	status = "TODO an update"
 	return &mb.UpdateAcctResponse{Account: nil, Status: status}, nil
 }

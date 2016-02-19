@@ -100,6 +100,26 @@ func main() {
 			},
 		},
 		{
+			Name:    "get",
+			Aliases: []string{"g"},
+			Usage:   "details on a specific account",
+			Action: func(c *cli.Context) {
+				acctStr = c.Args().First()
+				if !validAcctStr(acctStr) {
+					log.Fatalf("Invalid Account String: %q", acctStr)
+					os.Exit(1)
+				}
+				result, err := ws.ShowAcct(context.Background(), &mb.ShowAcctRequest{Acct: acctStr, Superkey: accessKey})
+				if err != nil {
+					fmt.Println("key", accessKey)
+					log.Fatalf("Bad Request: %v", err)
+					os.Exit(1)
+				}
+				log.Printf("Result: %s\n", result.Status)
+				log.Printf("Result: %s", result.Account)
+			},
+		},
+		{
 			Name:    "delete",
 			Aliases: []string{"d"},
 			Usage:   "mark an account deleted",
