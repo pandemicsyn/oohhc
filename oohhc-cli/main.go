@@ -141,7 +141,7 @@ func main() {
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				log.Printf("Result: %s\n", result.Status)
+				log.Printf("Delete Result: %s\n", result.Status)
 			},
 		},
 		{

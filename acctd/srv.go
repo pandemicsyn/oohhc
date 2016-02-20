@@ -110,6 +110,5 @@ func (aws *AccountWS) getGStore(g string, m string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("RETURNED VALUE FROM THE GROUP STORE\n", res.Value)
 	return fmt.Sprintf("%s", res.Value), nil
 }

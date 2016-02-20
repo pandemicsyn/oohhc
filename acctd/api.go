@@ -43,6 +43,7 @@ func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctReque
 	}
 	// validate account string
 	// validate new account does not exit
+	//TODO:
 
 	// create account information
 	// Group:		/acct
@@ -88,7 +89,7 @@ func (s *AccountAPIServer) ListAcct(ctx context.Context, r *mb.ListAcctRequest) 
 
 	// get information from the group store
 
-	status = "TODO"
+	status = "TODO:  A listing of all accounts"
 	return &mb.ListAcctResponse{Account: nil, Status: status}, nil
 }
 
@@ -145,10 +146,48 @@ func (s *AccountAPIServer) DeleteAcct(ctx context.Context, r *mb.DeleteAcctReque
 	}
 	// validate account string
 	// get information from the group store
+	group := "/acct"
+	member := r.Acct
+	fmt.Println("group", group)
+	fmt.Println("member", member)
 
+	// try and get account details form the group store
+	result, err := s.acctws.getGStore(group, member)
+	if err != nil {
+		status = fmt.Sprintf("Problem looking up %s.", r.Acct)
+		return &mb.DeleteAcctResponse{Status: status}, err
+	}
+	if result == "" {
+		status = fmt.Sprintf("Account %s not found", r.Acct)
+		return &mb.DeleteAcctResponse{Status: status}, errors.New("Not Found")
+	}
+	var p Payload
+	err = json.Unmarshal([]byte(result), &p)
+	if err != nil {
+		status = fmt.Sprintf("Details parsing error for %s", r.Acct)
+		return &mb.DeleteAcctResponse{Status: status}, err
+	}
+	// only active accounts can be marked as deleted
+	if p.Status != "active" || p.DeleteDate != 0 {
+		status = fmt.Sprintf("Account %s not in an active state. State: %s, Deleted Date: %d", r.Acct, p.Status, p.DeleteDate)
+		return &mb.DeleteAcctResponse{Status: status}, errors.New("Incorrect account status.")
+	}
 	// send delete to the group store
-
-	status = "TODO a delete"
+	p.Status = "deleted"
+	p.DeleteDate = time.Now().Unix()
+	detail, err := json.Marshal(p)
+	if err != nil {
+		status = fmt.Sprintf("account %s was not created", r.Acct)
+		return &mb.DeleteAcctResponse{Status: status}, err
+	}
+	// write updated information into the group store
+	result, err = s.acctws.writeGStore(group, member, detail)
+	if err != nil {
+		status = fmt.Sprintf("account %s was not deleted", r.Acct)
+		return &mb.DeleteAcctResponse{Status: status}, err
+	}
+	log.Println(result)
+	status = fmt.Sprintf("account %s was deleted", r.Acct)
 	return &mb.DeleteAcctResponse{Status: status}, nil
 }
 
