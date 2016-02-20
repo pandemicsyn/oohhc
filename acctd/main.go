@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
@@ -9,7 +8,6 @@ import (
 	"strconv"
 
 	mb "github.com/letterj/oohhc/proto/account"
-	gp "github.com/pandemicsyn/oort/api/groupproto"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -27,40 +25,6 @@ var (
 	insecureSkipVerify = flag.Bool("skipverify", true, "don't verify cert")
 	superUserKey       = flag.String("superkey", "123456789", "Super User key used for authentication")
 )
-
-// AccountWS the strurcture carrying all the extra stuff
-type AccountWS struct {
-	superKey           string
-	gaddr              string
-	gopts              []grpc.DialOption
-	gcreds             credentials.TransportAuthenticator
-	insecureSkipVerify bool
-	gconn              *grpc.ClientConn
-	gclient            gp.GroupStoreClient
-}
-
-// NewAccountWS function used to create a new admin grpc web service
-func NewAccountWS(superkey string, gaddr string, insecureSkipVerify bool, grpcOpts ...grpc.DialOption) (*AccountWS, error) {
-	// TODO: This all eventually needs to replaced with group rings
-	var err error
-	o := &AccountWS{
-		superKey: superkey,
-		gaddr:    gaddr,
-		gopts:    grpcOpts,
-		gcreds: credentials.NewTLS(&tls.Config{
-			InsecureSkipVerify: insecureSkipVerify,
-		}),
-		insecureSkipVerify: insecureSkipVerify,
-	}
-	o.gopts = append(o.gopts, grpc.WithTransportCredentials(o.gcreds))
-	o.gconn, err = grpc.Dial(o.gaddr, o.gopts...)
-	if err != nil {
-		return &AccountWS{}, err
-	}
-	o.gclient = gp.NewGroupStoreClient(o.gconn)
-	// TODO: this is copied from formicd so it doesn't reuse code.
-	return o, nil
-}
 
 // FatalIf is just a lazy log/panic on error func
 func FatalIf(err error, msg string) {

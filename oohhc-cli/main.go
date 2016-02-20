@@ -69,8 +69,15 @@ func main() {
 			Name:    "create",
 			Aliases: []string{"c"},
 			Usage:   "create a new account",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name, N",
+					Value: "",
+					Usage: "Name for an account.",
+				},
+			},
 			Action: func(c *cli.Context) {
-				acctStr = c.Args().First()
+				acctStr = c.String("name")
 				if !validAcctStr(acctStr) {
 					log.Fatalf("Invalid Account String: %q", acctStr)
 					os.Exit(1)
@@ -90,6 +97,26 @@ func main() {
 			Usage:   "list all accounts",
 			Action: func(c *cli.Context) {
 				result, err := ws.ListAcct(context.Background(), &mb.ListAcctRequest{Superkey: accessKey})
+				if err != nil {
+					fmt.Println("key", accessKey)
+					log.Fatalf("Bad Request: %v", err)
+					os.Exit(1)
+				}
+				log.Printf("Result: %s\n", result.Status)
+				log.Printf("Result: %s", result.Account)
+			},
+		},
+		{
+			Name:    "get",
+			Aliases: []string{"g"},
+			Usage:   "details on a specific account",
+			Action: func(c *cli.Context) {
+				acctStr = c.Args().First()
+				if !validAcctStr(acctStr) {
+					log.Fatalf("Invalid Account String: %q", acctStr)
+					os.Exit(1)
+				}
+				result, err := ws.ShowAcct(context.Background(), &mb.ShowAcctRequest{Acct: acctStr, Superkey: accessKey})
 				if err != nil {
 					fmt.Println("key", accessKey)
 					log.Fatalf("Bad Request: %v", err)
