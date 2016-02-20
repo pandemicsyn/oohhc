@@ -69,8 +69,15 @@ func main() {
 			Name:    "create",
 			Aliases: []string{"c"},
 			Usage:   "create a new account",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name, N",
+					Value: "",
+					Usage: "Name for an account.",
+				},
+			},
 			Action: func(c *cli.Context) {
-				acctStr = c.Args().First()
+				acctStr = c.String("name")
 				if !validAcctStr(acctStr) {
 					log.Fatalf("Invalid Account String: %q", acctStr)
 					os.Exit(1)

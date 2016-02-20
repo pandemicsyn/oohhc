@@ -68,7 +68,7 @@ func (aws *AccountWS) getGClient() {
 }
 
 // lookupAccount ...
-func (aws *AccountWS) lookupGStore(groupVal string, memberValue string) (string, error) {
+func (aws *AccountWS) lookupGStore(g string, m string) (string, error) {
 	if aws.gconn == nil {
 		aws.getGClient()
 	}
@@ -77,16 +77,16 @@ func (aws *AccountWS) lookupGStore(groupVal string, memberValue string) (string,
 }
 
 // lookupAccount ...
-func (aws *AccountWS) writeGStore(groupVal string, memberVal string, payLoad string) (string, error) {
+func (aws *AccountWS) writeGStore(g string, m string, p []byte) (string, error) {
 	if aws.gconn == nil {
 		aws.getGClient()
 	}
-	w := &gp.WriteRequest{}
 
+	w := &gp.WriteRequest{}
 	// prepare groupVal and memberVal
-	w.KeyA, w.KeyB = murmur3.Sum128([]byte(groupVal))
-	w.NameKeyA, w.NameKeyB = murmur3.Sum128([]byte(memberVal))
-	w.Value = []byte(payLoad)
+	w.KeyA, w.KeyB = murmur3.Sum128([]byte(g))
+	w.NameKeyA, w.NameKeyB = murmur3.Sum128([]byte(m))
+	w.Value = p
 	w.Tsm = brimtime.TimeToUnixMicro(time.Now())
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	res, err := aws.gc.Write(ctx, w)
@@ -97,18 +97,19 @@ func (aws *AccountWS) writeGStore(groupVal string, memberVal string, payLoad str
 }
 
 // lookupAccount ...
-func (aws *AccountWS) getGStore(groupVal string, memberVal string) (string, error) {
+func (aws *AccountWS) getGStore(g string, m string) (string, error) {
 	if aws.gconn == nil {
 		aws.getGClient()
 	}
 	// TODO:
 	r := &gp.ReadRequest{}
-	r.KeyA, r.KeyB = murmur3.Sum128([]byte(groupVal))
-	r.NameKeyA, r.NameKeyB = murmur3.Sum128([]byte(memberVal))
+	r.KeyA, r.KeyB = murmur3.Sum128([]byte(g))
+	r.NameKeyA, r.NameKeyB = murmur3.Sum128([]byte(m))
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	res, err := aws.gc.Read(ctx, r)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf(`{"TSM": %d, "VALUE": "%s"`, res.Tsm, res.Value), nil
+	fmt.Println("RETURNED VALUE FROM THE GROUP STORE\n", res.Value)
+	return fmt.Sprintf("%s", res.Value), nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -10,6 +11,16 @@ import (
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 )
+
+// Payload ...
+type Payload struct {
+	ID         string
+	Name       string
+	Token      string
+	Status     string
+	CreateDate int64
+	DeleteDate int64
+}
 
 // AccountAPIServer is used to implement grpchello.CfsAdminApiServer
 type AccountAPIServer struct {
@@ -39,15 +50,23 @@ func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctReque
 	// Value:   { "id": "uuid", "name": "name", "apikey": "12345",
 	//            "status": "active", "createdate": <timestamp>,
 	//            "deletedate": <timestamp> }
+	var p Payload
 	group := "/acct"
 	member := uuid.NewV4().String()
-	token := uuid.NewV4().String()
-	createDate := time.Now().Unix()
-	deleteDate := 0
-	details := fmt.Sprintf(`{"id": %s, "name": %s, "token": %s, "status": %s, "createdate": %d, "deletedate": %d}`, member, r.Acct, token, "active", createDate, deleteDate)
-
+	// build payload
+	p.ID = member
+	p.Name = r.Acct
+	p.Token = uuid.NewV4().String()
+	p.Status = "active"
+	p.CreateDate = time.Now().Unix()
+	p.DeleteDate = 0
+	detail, err := json.Marshal(p)
+	if err != nil {
+		status = fmt.Sprintf("account %s was not created", r.Acct)
+		return &mb.CreateAcctResponse{Status: status}, err
+	}
 	// write information into the group store
-	result, err := s.acctws.writeGStore(group, member, details)
+	result, err := s.acctws.writeGStore(group, member, detail)
 	if err != nil {
 		status = fmt.Sprintf("account %s was not created", r.Acct)
 		return &mb.CreateAcctResponse{Status: status}, err
@@ -91,12 +110,30 @@ func (s *AccountAPIServer) ShowAcct(ctx context.Context, r *mb.ShowAcctRequest) 
 	// try and get account details form the group store
 	result, err := s.acctws.getGStore(group, member)
 	if err != nil {
-		status = fmt.Sprintf("account %s was not found", r.Acct)
+		status = fmt.Sprintf("Problem looking up %s.", r.Acct)
 		return &mb.ShowAcctResponse{Account: nil, Status: status}, err
 	}
+	if result == "" {
+		status = fmt.Sprintf("Account %s not found", r.Acct)
+		return &mb.ShowAcctResponse{Account: nil, Status: status}, errors.New("Not Found")
+	}
+	var p Payload
+	err = json.Unmarshal([]byte(result), &p)
+	if err != nil {
+		status = fmt.Sprintf("Details parsing error for %s", r.Acct)
+		return &mb.ShowAcctResponse{Account: nil, Status: status}, err
+	}
+	a := &mb.Account{
+		Id:         p.ID,
+		Name:       p.Name,
+		Apikey:     p.Token,
+		Status:     p.Status,
+		CreateDate: p.CreateDate,
+		DeleteDate: p.DeleteDate,
+	}
 	log.Println(result)
-	status = fmt.Sprintf("account %s was found with id %s and values of %s", r.Acct, member, result)
-	return &mb.ShowAcctResponse{Account: nil, Status: status}, nil
+	status = fmt.Sprintf("account %s was found with id %s", r.Acct, member)
+	return &mb.ShowAcctResponse{Account: a, Status: status}, nil
 }
 
 // DeleteAcct ...
