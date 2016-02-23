@@ -12,8 +12,8 @@ import (
 	"golang.org/x/net/context"
 )
 
-// Payload ...
-type Payload struct {
+// PayLoad ...
+type PayLoad struct {
 	ID         string
 	Name       string
 	Token      string
@@ -51,29 +51,28 @@ func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctReque
 	// Value:   { "id": "uuid", "name": "name", "apikey": "12345",
 	//            "status": "active", "createdate": <timestamp>,
 	//            "deletedate": <timestamp> }
-	var p Payload
-	group := "/acct"
-	member := uuid.NewV4().String()
+	var p PayLoad
+	g := "/acct"
+	m := uuid.NewV4().String()
 	// build payload
-	p.ID = member
-	p.Name = r.Acct
+	p.ID = m
+	p.Name = r.Acctname
 	p.Token = uuid.NewV4().String()
 	p.Status = "active"
 	p.CreateDate = time.Now().Unix()
 	p.DeleteDate = 0
-	detail, err := json.Marshal(p)
+	d, err := json.Marshal(p)
 	if err != nil {
-		status = fmt.Sprintf("account %s was not created", r.Acct)
+		status = fmt.Sprintf("account %s was not created", r.Acctname)
 		return &mb.CreateAcctResponse{Status: status}, err
 	}
 	// write information into the group store
-	result, err := s.acctws.writeGStore(group, member, detail)
+	_, err = s.acctws.writeGStore(g, m, d)
 	if err != nil {
-		status = fmt.Sprintf("account %s was not created", r.Acct)
+		status = fmt.Sprintf("account %s was not created", r.Acctname)
 		return &mb.CreateAcctResponse{Status: status}, err
 	}
-	log.Println(result)
-	status = fmt.Sprintf("account %s was created with id %s", r.Acct, member)
+	status = fmt.Sprintf("account %s was created with id %s", r.Acctname, m)
 	return &mb.CreateAcctResponse{Status: status}, nil
 }
 
@@ -82,24 +81,23 @@ func (s *AccountAPIServer) ListAcct(ctx context.Context, r *mb.ListAcctRequest) 
 	var status string
 	// validate superapikey
 	if r.Superkey != s.acctws.superKey {
-		return &mb.ListAcctResponse{Account: nil, Status: "Invalid Credintials"}, errors.New("Permission Denied")
+		return &mb.ListAcctResponse{Payload: "", Status: "Invalid Credintials"}, errors.New("Permission Denied")
 	}
 	// validate account string
 	// build the group store request
-	group := "/acct"
-	fmt.Println("group", group)
+	g := "/acct"
 
 	// try and get account details form the group store
-	result, err := s.acctws.lookupGStore(group)
+	result, err := s.acctws.lookupGStore(g)
 	if err != nil {
-		status = fmt.Sprintf("Problem looking up accounts %s", "/acct")
-		return &mb.ListAcctResponse{Account: nil, Status: status}, err
+		status = fmt.Sprintf("Problem looking up account group %s", "/acct")
+		return &mb.ListAcctResponse{Payload: "", Status: status}, err
 	}
 	// get information from the group store
 	fmt.Println(result)
 
 	status = "TODO:  A listing of all accounts"
-	return &mb.ListAcctResponse{Account: nil, Status: status}, nil
+	return &mb.ListAcctResponse{Payload: "", Status: status}, nil
 }
 
 // ShowAcct ...
@@ -107,43 +105,32 @@ func (s *AccountAPIServer) ShowAcct(ctx context.Context, r *mb.ShowAcctRequest) 
 	var status string
 	// validate superapikey
 	if r.Superkey != s.acctws.superKey {
-		return &mb.ShowAcctResponse{Account: nil, Status: "Invalid Credintials"}, errors.New("Permission Denied")
+		return &mb.ShowAcctResponse{Payload: "", Status: "Invalid Credintials"}, errors.New("Permission Denied")
 	}
 	// validate account string
 
 	// build the group store request
-	group := "/acct"
-	member := r.Acct
-	fmt.Println("group", group)
-	fmt.Println("member", member)
+	g := "/acct"
+	m := r.Acctnum
 
 	// try and get account details form the group store
-	result, err := s.acctws.getGStore(group, member)
+	result, err := s.acctws.getGStore(g, m)
 	if err != nil {
-		status = fmt.Sprintf("Problem looking up %s.", r.Acct)
-		return &mb.ShowAcctResponse{Account: nil, Status: status}, err
+		status = fmt.Sprintf("Problem looking up %s.", r.Acctnum)
+		return &mb.ShowAcctResponse{Payload: "", Status: status}, err
 	}
 	if result == "" {
-		status = fmt.Sprintf("Account %s not found", r.Acct)
-		return &mb.ShowAcctResponse{Account: nil, Status: status}, errors.New("Not Found")
+		status = fmt.Sprintf("Account %s not found", r.Acctnum)
+		return &mb.ShowAcctResponse{Payload: "", Status: status}, errors.New("Not Found")
 	}
-	var p Payload
+	var p PayLoad
 	err = json.Unmarshal([]byte(result), &p)
 	if err != nil {
-		status = fmt.Sprintf("Details parsing error for %s", r.Acct)
-		return &mb.ShowAcctResponse{Account: nil, Status: status}, err
+		status = fmt.Sprintf("Details parsing error for %s", r.Acctnum)
+		return &mb.ShowAcctResponse{Payload: "", Status: status}, err
 	}
-	a := &mb.Account{
-		Id:         p.ID,
-		Name:       p.Name,
-		Apikey:     p.Token,
-		Status:     p.Status,
-		CreateDate: p.CreateDate,
-		DeleteDate: p.DeleteDate,
-	}
-	log.Println(result)
-	status = fmt.Sprintf("account %s was found with id %s", r.Acct, member)
-	return &mb.ShowAcctResponse{Account: a, Status: status}, nil
+	status = fmt.Sprintf("account %s was found with id %s", p.Name, r.Acctnum)
+	return &mb.ShowAcctResponse{Payload: result, Status: status}, nil
 }
 
 // DeleteAcct ...
@@ -155,48 +142,46 @@ func (s *AccountAPIServer) DeleteAcct(ctx context.Context, r *mb.DeleteAcctReque
 	}
 	// validate account string
 	// get information from the group store
-	group := "/acct"
-	member := r.Acct
-	fmt.Println("group", group)
-	fmt.Println("member", member)
+	g := "/acct"
+	m := r.Acctnum
 
 	// try and get account details form the group store
-	result, err := s.acctws.getGStore(group, member)
+	result, err := s.acctws.getGStore(g, m)
 	if err != nil {
-		status = fmt.Sprintf("Problem looking up %s.", r.Acct)
+		status = fmt.Sprintf("Problem looking up %s.", r.Acctnum)
 		return &mb.DeleteAcctResponse{Status: status}, err
 	}
 	if result == "" {
-		status = fmt.Sprintf("Account %s not found", r.Acct)
+		status = fmt.Sprintf("Account %s not found", r.Acctnum)
 		return &mb.DeleteAcctResponse{Status: status}, errors.New("Not Found")
 	}
-	var p Payload
+	var p PayLoad
 	err = json.Unmarshal([]byte(result), &p)
 	if err != nil {
-		status = fmt.Sprintf("Details parsing error for %s", r.Acct)
+		status = fmt.Sprintf("Details parsing error for %s", r.Acctnum)
 		return &mb.DeleteAcctResponse{Status: status}, err
 	}
 	// only active accounts can be marked as deleted
 	if p.Status != "active" || p.DeleteDate != 0 {
-		status = fmt.Sprintf("Account %s not in an active state. State: %s, Deleted Date: %d", r.Acct, p.Status, p.DeleteDate)
+		status = fmt.Sprintf("Account %s not in an active state. State: %s, Deleted Date: %d", r.Acctnum, p.Status, p.DeleteDate)
 		return &mb.DeleteAcctResponse{Status: status}, errors.New("Incorrect account status.")
 	}
 	// send delete to the group store
 	p.Status = "deleted"
 	p.DeleteDate = time.Now().Unix()
-	detail, err := json.Marshal(p)
+	d, err := json.Marshal(p)
 	if err != nil {
-		status = fmt.Sprintf("account %s was not created", r.Acct)
+		status = fmt.Sprintf("account %s was not created", r.Acctnum)
 		return &mb.DeleteAcctResponse{Status: status}, err
 	}
 	// write updated information into the group store
-	result, err = s.acctws.writeGStore(group, member, detail)
+	result, err = s.acctws.writeGStore(g, m, d)
 	if err != nil {
-		status = fmt.Sprintf("account %s was not deleted", r.Acct)
+		status = fmt.Sprintf("account %s was not deleted", r.Acctnum)
 		return &mb.DeleteAcctResponse{Status: status}, err
 	}
 	log.Println(result)
-	status = fmt.Sprintf("account %s was deleted", r.Acct)
+	status = fmt.Sprintf("account %s was deleted", r.Acctnum)
 	return &mb.DeleteAcctResponse{Status: status}, nil
 }
 
@@ -205,13 +190,64 @@ func (s *AccountAPIServer) UpdateAcct(ctx context.Context, r *mb.UpdateAcctReque
 	var status string
 	// validate superapikey
 	if r.Superkey != s.acctws.superKey {
-		return &mb.UpdateAcctResponse{Account: nil, Status: "Invalid Credintials"}, errors.New("Permission Denied")
+		return &mb.UpdateAcctResponse{Payload: "", Status: "Invalid Credintials"}, errors.New("Permission Denied")
 	}
 	// validate account string
-	// pull the account information
+	g := "/acct"
+	m := r.Acctnum
 
+	// try and get account details form the group store
+	result, err := s.acctws.getGStore(g, m)
+	if err != nil {
+		status = fmt.Sprintf("Problem looking up %s.", r.Acctnum)
+		return &mb.UpdateAcctResponse{Payload: "", Status: status}, err
+	}
+	if result == "" {
+		status = fmt.Sprintf("Account %s not found", r.Acctnum)
+		return &mb.UpdateAcctResponse{Payload: "", Status: status}, errors.New("Not Found")
+	}
+	var p PayLoad
+	err = json.Unmarshal([]byte(result), &p)
+	if err != nil {
+		status = fmt.Sprintf("Details parsing error for %s", r.Acctnum)
+		return &mb.UpdateAcctResponse{Payload: "", Status: status}, err
+	}
+	// update account information
+	if r.ModAcct.Name != "" {
+		p.Name = r.ModAcct.Name
+	}
+	if r.ModAcct.Status != "" {
+		if p.Status == "deleted" && r.ModAcct.Status != "deleted" {
+			p.DeleteDate = 0
+		}
+		p.Status = r.ModAcct.Status
+	}
+	if r.ModAcct.Token != "" {
+		p.Token = r.ModAcct.Token
+	}
 	// write new information to the group store
-
-	status = "TODO an update"
-	return &mb.UpdateAcctResponse{Account: nil, Status: status}, nil
+	d, err := json.Marshal(p)
+	if err != nil {
+		status = fmt.Sprintf("account %s was not updated", r.Acctnum)
+		return &mb.UpdateAcctResponse{Payload: "", Status: status}, err
+	}
+	// write information into the group store
+	_, err = s.acctws.writeGStore(g, m, d)
+	if err != nil {
+		status = fmt.Sprintf("account %s was not updated", r.Acctnum)
+		return &mb.UpdateAcctResponse{Payload: "", Status: status}, err
+	}
+	// Pull updated data
+	uresult, err := s.acctws.getGStore(g, m)
+	if err != nil {
+		status = fmt.Sprintf("Problem looking up updated account %s.", r.Acctnum)
+		return &mb.UpdateAcctResponse{Payload: "", Status: status}, err
+	}
+	if uresult == "" {
+		status = fmt.Sprintf("Updated account %s not found", r.Acctnum)
+		return &mb.UpdateAcctResponse{Payload: "", Status: status}, errors.New("Server Error")
+	}
+	// Good request return
+	status = fmt.Sprintf("account %s with id %s was updated", p.Name, r.Acctnum)
+	return &mb.UpdateAcctResponse{Payload: uresult, Status: status}, nil
 }

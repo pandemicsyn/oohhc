@@ -74,7 +74,7 @@ func (aws *AccountWS) lookupGStore(g string) (string, error) {
 		aws.getGClient()
 	}
 	l := &gp.LookupGroupRequest{}
-	l.A, l.B = murmur3.Sum128([]byte(g))
+	l.KeyA, l.KeyB = murmur3.Sum128([]byte(g))
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	res, err := aws.gc.LookupGroup(ctx, l)
 	if err != nil {
@@ -83,10 +83,10 @@ func (aws *AccountWS) lookupGStore(g string) (string, error) {
 	m := make([]string, len(res.Items))
 	r := &gp.ReadRequest{}
 	for k, v := range res.Items {
-		r.KeyA = l.A
-		r.KeyB = l.B
-		r.NameKeyA = v.NameKeyA
-		r.NameKeyB = v.NameKeyB
+		r.KeyA = l.KeyA
+		r.KeyB = l.KeyB
+		r.ChildKeyA = v.ChildKeyA
+		r.ChildKeyB = v.ChildKeyB
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		res, err := aws.gc.Read(ctx, r)
 		if err != nil {
@@ -106,15 +106,15 @@ func (aws *AccountWS) writeGStore(g string, m string, p []byte) (string, error) 
 	w := &gp.WriteRequest{}
 	// prepare groupVal and memberVal
 	w.KeyA, w.KeyB = murmur3.Sum128([]byte(g))
-	w.NameKeyA, w.NameKeyB = murmur3.Sum128([]byte(m))
+	w.ChildKeyA, w.ChildKeyB = murmur3.Sum128([]byte(m))
 	w.Value = p
-	w.Tsm = brimtime.TimeToUnixMicro(time.Now())
+	w.TimestampMicro = brimtime.TimeToUnixMicro(time.Now())
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	res, err := aws.gc.Write(ctx, w)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("WRITE TSM: %d\nTSM: %d", w.Tsm, res.Tsm), nil
+	return fmt.Sprintf("WRITE TSM: %d\nTSM: %d", w.TimestampMicro, res.TimestampMicro), nil
 }
 
 // lookupAccount ...
@@ -125,7 +125,7 @@ func (aws *AccountWS) getGStore(g string, m string) (string, error) {
 	// TODO:
 	r := &gp.ReadRequest{}
 	r.KeyA, r.KeyB = murmur3.Sum128([]byte(g))
-	r.NameKeyA, r.NameKeyB = murmur3.Sum128([]byte(m))
+	r.ChildKeyA, r.ChildKeyB = murmur3.Sum128([]byte(m))
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	res, err := aws.gc.Read(ctx, r)
 	if err != nil {

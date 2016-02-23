@@ -1,5 +1,5 @@
-// cfsadmin proto file
-// protoc --go_out=plugins=grpc:. *.proto
+// account proto file
+// protoc --gofast_out=plugins=grpc:. *.proto
 
 
 syntax = 'proto3';
@@ -15,27 +15,16 @@ service AccountApi {
   rpc UpdateAcct(UpdateAcctRequest) returns (UpdateAcctResponse) {}
 }
 
-// Account Profile
-message Account {
-  string    id            = 1;
-  string    name          = 2;
-  string    apikey        = 3;
-  string    status        = 4;
-  int64     createDate    = 5;
-  int64     deleteDate    = 6;
-}
-
-// Values that can be changed on an account 
+// Values that can be changed on an account
 message ModAccount {
   string    name         = 1;
-  string    apikey       = 2;
+  string    token        = 2;
   string    status       = 3;
-  int64     deletedate   = 4;
 }
 
 // Request to Create an account
 message CreateAcctRequest {
-  string    acct          = 1;
+  string    acctname      = 1;
   string    superkey      = 2;
 }
 
@@ -51,25 +40,25 @@ message ListAcctRequest {
 
 // Response for account Show results
 message ListAcctResponse {
-  repeated  Account   account       = 1;
-  string              status        = 2;
+  string   payload       = 1;
+  string   status        = 2;
 }
 
 // Request to show an account
 message ShowAcctRequest {
-  string    acct          = 1;
+  string    acctnum       = 1;
   string    superkey      = 2;
 }
 
 // Response for account Show results
 message ShowAcctResponse {
-  Account   account       = 1;
+  string    payload       = 1;
   string    status        = 2;
 }
 
 // Request to Delete account
 message DeleteAcctRequest {
-  string    acct          = 1;
+  string    acctnum       = 1;
   string    superkey      = 2;
 }
 
@@ -80,13 +69,13 @@ message DeleteAcctResponse {
 
 // Request to Update account's api key
 message UpdateAcctRequest {
-  string        acct          = 1;
+  string        acctnum       = 1;
   string        superkey      = 2;
   ModAccount    modAcct       = 3;
 }
 
 // Response for account Update results
 message UpdateAcctResponse {
-  Account   account       = 1;
+  string    payload       = 1;
   string    status        = 2;
 }
