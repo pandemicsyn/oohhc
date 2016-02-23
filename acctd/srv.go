@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -68,12 +69,32 @@ func (aws *AccountWS) getGClient() {
 }
 
 // lookupAccount ...
-func (aws *AccountWS) lookupGStore(g string, m string) (string, error) {
+func (aws *AccountWS) lookupGStore(g string) (string, error) {
 	if aws.gconn == nil {
 		aws.getGClient()
 	}
-	// TODO:
-	return "ok", nil
+	l := &gp.LookupGroupRequest{}
+	l.A, l.B = murmur3.Sum128([]byte(g))
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	res, err := aws.gc.LookupGroup(ctx, l)
+	if err != nil {
+		return "", err
+	}
+	m := make([]string, len(res.Items))
+	r := &gp.ReadRequest{}
+	for k, v := range res.Items {
+		r.KeyA = l.A
+		r.KeyB = l.B
+		r.NameKeyA = v.NameKeyA
+		r.NameKeyB = v.NameKeyB
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		res, err := aws.gc.Read(ctx, r)
+		if err != nil {
+			return "", err
+		}
+		m[k] = fmt.Sprintf("%s", res.Value)
+	}
+	return fmt.Sprintf(strings.Join(m, ",")), nil
 }
 
 // lookupAccount ...
