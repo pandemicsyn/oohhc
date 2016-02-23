@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"fmt"
 	"log"
 	"os"
 
@@ -43,7 +42,7 @@ func main() {
 
 	// Process command line arguments
 	var accessKey string
-	var acctStr string
+	var acctNum string
 
 	app := cli.NewApp()
 	app.Name = "oohhc-cli"
@@ -77,18 +76,17 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) {
-				acctStr = c.String("name")
-				if !validAcctStr(acctStr) {
-					log.Fatalf("Invalid Account String: %q", acctStr)
+				acctName := c.String("name")
+				if !validAcctName(acctName) {
+					log.Fatalf("Invalid Account String: %q", acctName)
 					os.Exit(1)
 				}
-				result, err := ws.CreateAcct(context.Background(), &mb.CreateAcctRequest{Acct: acctStr, Superkey: accessKey})
+				result, err := ws.CreateAcct(context.Background(), &mb.CreateAcctRequest{Acctname: acctName, Superkey: accessKey})
 				if err != nil {
-					fmt.Println("key", accessKey)
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				log.Printf("Result: %s", result.Status)
+				log.Printf("CREATE Result: %s", result.Status)
 			},
 		},
 		{
@@ -98,12 +96,11 @@ func main() {
 			Action: func(c *cli.Context) {
 				result, err := ws.ListAcct(context.Background(), &mb.ListAcctRequest{Superkey: accessKey})
 				if err != nil {
-					fmt.Println("key", accessKey)
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
 				log.Printf("Result: %s\n", result.Status)
-				log.Printf("Result: %s", result.Account)
+				log.Printf("LIST Results: %s", result.Payload)
 			},
 		},
 		{
@@ -111,19 +108,14 @@ func main() {
 			Aliases: []string{"g"},
 			Usage:   "details on a specific account",
 			Action: func(c *cli.Context) {
-				acctStr = c.Args().First()
-				if !validAcctStr(acctStr) {
-					log.Fatalf("Invalid Account String: %q", acctStr)
-					os.Exit(1)
-				}
-				result, err := ws.ShowAcct(context.Background(), &mb.ShowAcctRequest{Acct: acctStr, Superkey: accessKey})
+				acctNum = c.Args().First()
+				result, err := ws.ShowAcct(context.Background(), &mb.ShowAcctRequest{Acctnum: acctNum, Superkey: accessKey})
 				if err != nil {
-					fmt.Println("key", accessKey)
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				log.Printf("Result: %s\n", result.Status)
-				log.Printf("Result: %s", result.Account)
+				log.Printf("GET Result: %s\n", result.Status)
+				log.Printf("Account: %s", result.Payload)
 			},
 		},
 		{
@@ -131,17 +123,13 @@ func main() {
 			Aliases: []string{"d"},
 			Usage:   "mark an account deleted",
 			Action: func(c *cli.Context) {
-				acctStr = c.Args().First()
-				if !validAcctStr(acctStr) {
-					log.Fatalf("Invalid Account String: %q", acctStr)
-					os.Exit(1)
-				}
-				result, err := ws.DeleteAcct(context.Background(), &mb.DeleteAcctRequest{Acct: acctStr, Superkey: accessKey})
+				acctNum = c.Args().First()
+				result, err := ws.DeleteAcct(context.Background(), &mb.DeleteAcctRequest{Acctnum: acctNum, Superkey: accessKey})
 				if err != nil {
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				log.Printf("Delete Result: %s\n", result.Status)
+				log.Printf("DELETE Result: %s\n", result.Status)
 			},
 		},
 		{
@@ -155,42 +143,34 @@ func main() {
 					Usage: "New name for an account.",
 				},
 				cli.StringFlag{
-					Name:  "apikey, K",
+					Name:  "token, T",
 					Value: "",
-					Usage: "New apikey for the account",
+					Usage: "New token for the account",
 				},
 				cli.StringFlag{
 					Name:  "status, S",
 					Value: "",
 					Usage: "New status for an account.",
 				},
-				cli.BoolFlag{
-					Name:  "undelete, D",
-					Usage: "Undelete an account",
-				},
 			},
 			Action: func(c *cli.Context) {
-				acctStr = c.Args().First()
-				if !validAcctStr(acctStr) {
-					log.Fatalf("Invalid Account String: %q", acctStr)
+				acctNum = c.Args().First()
+				if c.String("name") != "" && !validAcctName(c.String("name")) {
+					log.Fatalf("Invalid Account String: %q", c.String("name"))
 					os.Exit(1)
 				}
-				var newDate int64
-				if c.Bool("undelete") {
-					newDate = 0
-				}
 				modAcct := &mb.ModAccount{
-					Name:       c.String("name"),
-					Apikey:     c.String("apikey"),
-					Status:     c.String("status"),
-					Deletedate: newDate,
+					Name:   c.String("name"),
+					Token:  c.String("token"),
+					Status: c.String("status"),
 				}
-				result, err := ws.UpdateAcct(context.Background(), &mb.UpdateAcctRequest{Acct: acctStr, Superkey: accessKey, ModAcct: modAcct})
+				result, err := ws.UpdateAcct(context.Background(), &mb.UpdateAcctRequest{Acctnum: acctNum, Superkey: accessKey, ModAcct: modAcct})
 				if err != nil {
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				log.Printf("Result: %s\n", result.Status)
+				log.Printf("UPDATE Status Result: %s\n", result.Status)
+				log.Printf("UPDATE Result: %s", result.Payload)
 			},
 		},
 	}
@@ -198,7 +178,7 @@ func main() {
 }
 
 // Validate the account string passed in from the command line
-func validAcctStr(a string) bool {
+func validAcctName(a string) bool {
 	//TODO: Determine what needs to be done to validate
 	return true
 }
