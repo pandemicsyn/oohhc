@@ -93,11 +93,10 @@ func (s *AccountAPIServer) ListAcct(ctx context.Context, r *mb.ListAcctRequest) 
 		status = fmt.Sprintf("Problem looking up account group %s", "/acct")
 		return &mb.ListAcctResponse{Payload: "", Status: status}, err
 	}
-	// get information from the group store
 	fmt.Println(result)
 
-	status = "TODO:  A listing of all accounts"
-	return &mb.ListAcctResponse{Payload: "", Status: status}, nil
+	status = fmt.Sprintf("Complete listing for group %s", g)
+	return &mb.ListAcctResponse{Payload: result, Status: status}, nil
 }
 
 // ShowAcct ...
