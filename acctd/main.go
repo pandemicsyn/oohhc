@@ -20,7 +20,7 @@ var (
 	usetls             = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
 	certFile           = flag.String("cert_file", "/etc/oort/server.crt", "The TLS cert file")
 	keyFile            = flag.String("key_file", "/etc/oort/server.key", "The TLS key file")
-	port               = flag.Int("port", 8449, "The server port")
+	port               = flag.Int("port", 8449, "The acctd server port")
 	oortGroupHost      = flag.String("oortgrouphost", "127.0.0.1:6380", "host:port to use when connecting to oort group")
 	insecureSkipVerify = flag.Bool("skipverify", true, "don't verify cert")
 	superUserKey       = flag.String("superkey", "123456789", "Super User key used for authentication")
@@ -36,7 +36,7 @@ func FatalIf(err error, msg string) {
 func main() {
 	flag.Parse()
 
-	envtls := os.Getenv("OOHHC_ACCOUNT_TLS")
+	envtls := os.Getenv("OOHHC_ACCT_TLS")
 	if envtls == "true" {
 		*usetls = true
 	}
@@ -46,7 +46,7 @@ func main() {
 		*oortGroupHost = envoortghost
 	}
 
-	envport := os.Getenv("OOHHC_PORT")
+	envport := os.Getenv("OOHHC_ACCT_PORT")
 	if envport != "" {
 		p, err := strconv.Atoi(envport)
 		if err != nil {
@@ -56,19 +56,24 @@ func main() {
 		}
 	}
 
-	envcert := os.Getenv("OOHHC_CERT_FILE")
+	envcert := os.Getenv("OOHHC_ACCT_CERT_FILE")
 	if envcert != "" {
 		*certFile = envcert
 	}
 
-	envkey := os.Getenv("OOHHC_KEY_FILE")
+	envkey := os.Getenv("OOHHC_ACCT_KEY_FILE")
 	if envkey != "" {
 		*keyFile = envkey
 	}
 
-	envSuperKey := os.Getenv("OOHHC_SUPERUSER_KEY")
+	envSuperKey := os.Getenv("OOHHC_ACCT_SUPERUSER_KEY")
 	if envSuperKey != "" {
 		*superUserKey = envSuperKey
+	}
+
+	envSkipVerify := os.Getenv("OOHHC_ACCT_SKIP_VERIFY")
+	if envSkipVerify != "true" {
+		*insecureSkipVerify = true
 	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
