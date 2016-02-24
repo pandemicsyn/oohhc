@@ -1,6 +1,19 @@
 # oohhc
 A simple set of management servers and an admin client for metadata that uses the group store for persistent storage.
+The account data will be stored in the group store using the following format:
 
+```
+   Key:               /acct
+   ChildKey:          [uuid]
+   Value:   { 
+               "ID": [uuid],                 # same value as the ChildKey
+               "Name": "[string]",           
+               "Token": [uuid],     
+               "Status": "[string]",         # active, deleted, suspended
+               "CreateDate": [timestamp],
+               "DeleteDate": [timestamp]     # default 0
+        }
+```
 
 ## oohhc-acctd
 This is the account web service implemented in gRPC.  It can either be run on the command line or using systemctl
