@@ -16,6 +16,7 @@ import (
 	"fmt"
 
 	fb "github.com/letterj/oohhc/proto/filesystem"
+	"google.golang.org/grpc/peer"
 
 	"golang.org/x/net/context"
 )
@@ -46,6 +47,11 @@ func NewFileSystemAPIServer(filesysWS *FileSystemWS) *FileSystemAPIServer {
 func (s *FileSystemAPIServer) CreateFS(ctx context.Context, r *fb.CreateFSRequest) (*fb.CreateFSResponse, error) {
 	var status string
 	var result string
+	// Get incomming ip
+	pr, ok := peer.FromContext(ctx)
+	if ok {
+		fmt.Println(pr.Addr)
+	}
 	// validate token
 	if !validToken(r.Acctnum, r.Token) {
 		return &fb.CreateFSResponse{Status: "Invalid Credintials"}, errors.New("Permission Denied")
@@ -146,6 +152,7 @@ func (s *FileSystemAPIServer) RevokeAddrFS(ctx context.Context, r *fb.RevokeAddr
 
 // validToken
 func validToken(a string, t string) bool {
+
 	// call the group store to get the info
 	return true
 }
