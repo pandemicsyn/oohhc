@@ -25,7 +25,7 @@ message ModFS {
 // Request to create a new filesystem
 message CreateFSRequest {
   string  acctnum         = 1;
-  string  name            = 2;
+  string  fsname          = 2;
   string  token           = 3;
   string  ipaddress       = 4;
 }

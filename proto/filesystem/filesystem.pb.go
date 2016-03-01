@@ -56,7 +56,7 @@ func (*ModFS) ProtoMessage()    {}
 // Request to create a new filesystem
 type CreateFSRequest struct {
 	Acctnum   string `protobuf:"bytes,1,opt,name=acctnum,proto3" json:"acctnum,omitempty"`
-	Name      string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Fsname    string `protobuf:"bytes,2,opt,name=fsname,proto3" json:"fsname,omitempty"`
 	Token     string `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
 	Ipaddress string `protobuf:"bytes,4,opt,name=ipaddress,proto3" json:"ipaddress,omitempty"`
 }
@@ -501,11 +501,11 @@ func (m *CreateFSRequest) MarshalTo(data []byte) (int, error) {
 		i = encodeVarintFilesystem(data, i, uint64(len(m.Acctnum)))
 		i += copy(data[i:], m.Acctnum)
 	}
-	if len(m.Name) > 0 {
+	if len(m.Fsname) > 0 {
 		data[i] = 0x12
 		i++
-		i = encodeVarintFilesystem(data, i, uint64(len(m.Name)))
-		i += copy(data[i:], m.Name)
+		i = encodeVarintFilesystem(data, i, uint64(len(m.Fsname)))
+		i += copy(data[i:], m.Fsname)
 	}
 	if len(m.Token) > 0 {
 		data[i] = 0x1a
@@ -1000,7 +1000,7 @@ func (m *CreateFSRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
-	l = len(m.Name)
+	l = len(m.Fsname)
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
@@ -1402,7 +1402,7 @@ func (m *CreateFSRequest) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Fsname", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1427,7 +1427,7 @@ func (m *CreateFSRequest) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Name = string(data[iNdEx:postIndex])
+			m.Fsname = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
