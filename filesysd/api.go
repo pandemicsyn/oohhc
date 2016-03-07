@@ -14,6 +14,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	fb "github.com/letterj/oohhc/proto/filesystem"
 	"google.golang.org/grpc/peer"
@@ -47,6 +48,7 @@ func NewFileSystemAPIServer(filesysWS *FileSystemWS) *FileSystemAPIServer {
 func (s *FileSystemAPIServer) CreateFS(ctx context.Context, r *fb.CreateFSRequest) (*fb.CreateFSResponse, error) {
 	var status string
 	var result string
+	log.Printf("CREATE Request by %s", r.Acctnum)
 	// Get incomming ip
 	pr, ok := peer.FromContext(ctx)
 	if ok {
@@ -68,6 +70,7 @@ func (s *FileSystemAPIServer) CreateFS(ctx context.Context, r *fb.CreateFSReques
 func (s *FileSystemAPIServer) ListFS(ctx context.Context, r *fb.ListFSRequest) (*fb.ListFSResponse, error) {
 	var status string
 	var result string
+	log.Printf("LIST Request by %s with token %s", r.Acctnum, r.Token)
 	// validate token
 	if !validToken(r.Acctnum, r.Token) {
 		return &fb.ListFSResponse{Status: "Invalid Credintials"}, errors.New("Permission Denied")
@@ -85,6 +88,7 @@ func (s *FileSystemAPIServer) ListFS(ctx context.Context, r *fb.ListFSRequest) (
 func (s *FileSystemAPIServer) ShowFS(ctx context.Context, r *fb.ShowFSRequest) (*fb.ShowFSResponse, error) {
 	var status string
 	var result string
+	log.Printf("SHOW Request by %s", r.Acctnum)
 	// validate token
 	if !validToken(r.Acctnum, r.Token) {
 		return &fb.ShowFSResponse{Payload: "", Status: "Invalid Credintials"}, errors.New("Permission Denied")
@@ -102,6 +106,7 @@ func (s *FileSystemAPIServer) ShowFS(ctx context.Context, r *fb.ShowFSRequest) (
 func (s *FileSystemAPIServer) DeleteFS(ctx context.Context, r *fb.DeleteFSRequest) (*fb.DeleteFSResponse, error) {
 	var status string
 	var result string
+	log.Printf("DELETE Request by %s", r.Acctnum)
 	// validate Token
 	if !validToken(r.Acctnum, r.Token) {
 		return &fb.DeleteFSResponse{Payload: "", Status: "Invalid Credintials"}, errors.New("Permission Denied")
@@ -119,6 +124,7 @@ func (s *FileSystemAPIServer) DeleteFS(ctx context.Context, r *fb.DeleteFSReques
 func (s *FileSystemAPIServer) UpdateFS(ctx context.Context, r *fb.UpdateFSRequest) (*fb.UpdateFSResponse, error) {
 	var status string
 	var result string
+	log.Printf("UPDATE Request by %s", r.Acctnum)
 	// validate token
 	if !validToken(r.Acctnum, r.Token) {
 		return &fb.UpdateFSResponse{Payload: "", Status: "Invalid Credintials"}, errors.New("Permission Denied")
@@ -133,6 +139,7 @@ func (s *FileSystemAPIServer) UpdateFS(ctx context.Context, r *fb.UpdateFSReques
 // GrantAddrFS ...
 func (s *FileSystemAPIServer) GrantAddrFS(ctx context.Context, r *fb.GrantAddrFSRequest) (*fb.GrantAddrFSResponse, error) {
 	var status string
+	log.Printf("GRANTADDR Request by %s", r.Acctnum)
 	// validate token
 
 	// DO stuff
@@ -143,6 +150,7 @@ func (s *FileSystemAPIServer) GrantAddrFS(ctx context.Context, r *fb.GrantAddrFS
 // RevokeAddrFS ...
 func (s *FileSystemAPIServer) RevokeAddrFS(ctx context.Context, r *fb.RevokeAddrFSRequest) (*fb.RevokeAddrFSResponse, error) {
 	var status string
+	log.Printf("REVOKEADDR Request by %s", r.Acctnum)
 	// validate token
 
 	// DO stuff
