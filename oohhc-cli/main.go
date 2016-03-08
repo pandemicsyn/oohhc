@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
 	"os"
 
@@ -65,9 +66,8 @@ func main() {
 	}
 	app.Commands = []cli.Command{
 		{
-			Name:    "create",
-			Aliases: []string{"c"},
-			Usage:   "create a new account",
+			Name:  "create",
+			Usage: "create a new account",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, N",
@@ -76,66 +76,78 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) {
+				if c.Args().Present() {
+					log.Fatalf("Invalid syntax for create.")
+					os.Exit(1)
+				}
 				acctName := c.String("name")
 				if !validAcctName(acctName) {
 					log.Fatalf("Invalid Account String: %q", acctName)
 					os.Exit(1)
 				}
 				result, err := ws.CreateAcct(context.Background(), &mb.CreateAcctRequest{Acctname: acctName, Superkey: accessKey})
+				fmt.Println(result.Status)
 				if err != nil {
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				log.Printf("CREATE Result: %s", result.Status)
 			},
 		},
 		{
-			Name:    "list",
-			Aliases: []string{"l"},
-			Usage:   "list all accounts",
+			Name:  "list",
+			Usage: "list all accounts",
 			Action: func(c *cli.Context) {
+				if c.Args().Present() {
+					log.Fatalf("Invalid syntax for list.")
+					os.Exit(1)
+				}
 				result, err := ws.ListAcct(context.Background(), &mb.ListAcctRequest{Superkey: accessKey})
 				if err != nil {
+					fmt.Println(result.Status)
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				log.Printf("Result: %s\n", result.Status)
-				log.Printf("LIST Results: %s", result.Payload)
+				fmt.Printf(`{"accounts": [%s]}`, result.Payload)
 			},
 		},
 		{
-			Name:    "get",
-			Aliases: []string{"g"},
-			Usage:   "details on a specific account",
+			Name:  "get",
+			Usage: "details on a specific account",
 			Action: func(c *cli.Context) {
-				acctNum = c.Args().First()
+				if !c.Args().Present() {
+					log.Fatalf("Account Number required field")
+					os.Exit(1)
+				}
+				acctNum = c.Args().Get(0)
 				result, err := ws.ShowAcct(context.Background(), &mb.ShowAcctRequest{Acctnum: acctNum, Superkey: accessKey})
 				if err != nil {
+					fmt.Println(result.Status)
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				log.Printf("GET Result: %s\n", result.Status)
-				log.Printf("Account: %s", result.Payload)
+				fmt.Printf(`{"accounts": [%s]}`, result.Payload)
 			},
 		},
 		{
-			Name:    "delete",
-			Aliases: []string{"d"},
-			Usage:   "mark an account deleted",
+			Name:  "delete",
+			Usage: "mark an account deleted",
 			Action: func(c *cli.Context) {
-				acctNum = c.Args().First()
+				if !c.Args().Present() {
+					log.Fatalf("Account Number required field")
+					os.Exit(1)
+				}
+				acctNum = c.Args().Get(0)
 				result, err := ws.DeleteAcct(context.Background(), &mb.DeleteAcctRequest{Acctnum: acctNum, Superkey: accessKey})
+				fmt.Println(result.Status)
 				if err != nil {
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				log.Printf("DELETE Result: %s\n", result.Status)
 			},
 		},
 		{
-			Name:    "update",
-			Aliases: []string{"u"},
-			Usage:   "update the information on an account",
+			Name:  "update",
+			Usage: "update the information on an account",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, N",
@@ -154,7 +166,11 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) {
-				acctNum = c.Args().First()
+				if !c.Args().Present() {
+					log.Fatalf("Account Number required field")
+					os.Exit(1)
+				}
+				acctNum = c.Args().Get(0)
 				if c.String("name") != "" && !validAcctName(c.String("name")) {
 					log.Fatalf("Invalid Account String: %q", c.String("name"))
 					os.Exit(1)
@@ -166,11 +182,11 @@ func main() {
 				}
 				result, err := ws.UpdateAcct(context.Background(), &mb.UpdateAcctRequest{Acctnum: acctNum, Superkey: accessKey, ModAcct: modAcct})
 				if err != nil {
+					fmt.Println(result.Status)
 					log.Fatalf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				log.Printf("UPDATE Status Result: %s\n", result.Status)
-				log.Printf("UPDATE Result: %s", result.Payload)
+				fmt.Printf(`{"accounts": [%s]}`, result.Payload)
 			},
 		},
 	}
