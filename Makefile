@@ -1,0 +1,26 @@
+SHA := $(shell git rev-parse --short HEAD)
+VERSION := $(shell cat VERSION)
+ITTERATION := $(shell date +%s)
+LOCALPKGS :=  $(shell go list ./... | grep -v /vendor/)
+
+deps:
+	go get -u -f $(LOCALPKGS)
+
+build:
+	mkdir -p packaging/output
+	mkdir -p packaging/root/usr/local/bin
+	go build -i -v -o packaging/root/usr/local/bin/oohhc-cli github.com/letterj/oohhc/oohhc-cli
+	go build -i -v -o packaging/root/usr/local/bin/oohhc-acctd github.com/letterj/oohhc/acctd
+	go build -i -v -o packaging/root/usr/local/bin/oohhc-filesysd github.com/letterj/oohhc/filesysd
+
+clean:
+	rm -rf packaging/output
+	rm -f packaging/root/usr/local/bin
+
+install: build
+	cp -av packaging/root/usr/local/bin/* $(GOPATH)/bin
+
+test:
+	go test ./...
+
+packages: clean deps build deb
