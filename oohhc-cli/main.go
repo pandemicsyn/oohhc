@@ -82,15 +82,15 @@ func main() {
 				}
 				acctName := c.String("name")
 				if !validAcctName(acctName) {
-					log.Fatalf("Invalid Account String: %q", acctName)
+					fmt.Printf("Invalid Account String: %q", acctName)
 					os.Exit(1)
 				}
 				result, err := ws.CreateAcct(context.Background(), &mb.CreateAcctRequest{Acctname: acctName, Superkey: accessKey})
-				fmt.Println(result.Status)
 				if err != nil {
-					log.Fatalf("Bad Request: %v", err)
+					fmt.Printf("Bad Request: %v", err)
 					os.Exit(1)
 				}
+				fmt.Printf(`{"status": "%s", "accounts":[]}`, result.Status)
 			},
 		},
 		{
@@ -98,16 +98,15 @@ func main() {
 			Usage: "list all accounts",
 			Action: func(c *cli.Context) {
 				if c.Args().Present() {
-					log.Fatalf("Invalid syntax for list.")
+					fmt.Printf("Invalid syntax for list.")
 					os.Exit(1)
 				}
 				result, err := ws.ListAcct(context.Background(), &mb.ListAcctRequest{Superkey: accessKey})
 				if err != nil {
-					fmt.Println(result.Status)
-					log.Fatalf("Bad Request: %v", err)
+					fmt.Printf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				fmt.Printf(`{"accounts": [%s]}`, result.Payload)
+				fmt.Printf(`{"status":, "OK", "accounts": [%s]}`, result.Payload)
 			},
 		},
 		{
@@ -115,17 +114,16 @@ func main() {
 			Usage: "details on a specific account",
 			Action: func(c *cli.Context) {
 				if !c.Args().Present() {
-					log.Fatalf("Account Number required field")
+					fmt.Println("Account Number required field")
 					os.Exit(1)
 				}
 				acctNum = c.Args().Get(0)
 				result, err := ws.ShowAcct(context.Background(), &mb.ShowAcctRequest{Acctnum: acctNum, Superkey: accessKey})
 				if err != nil {
-					fmt.Println(result.Status)
-					log.Fatalf("Bad Request: %v", err)
+					fmt.Printf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				fmt.Printf(`{"accounts": [%s]}`, result.Payload)
+				fmt.Printf(`{"status": "OK", "accounts": [%s]}`, result.Payload)
 			},
 		},
 		{
@@ -133,16 +131,16 @@ func main() {
 			Usage: "mark an account deleted",
 			Action: func(c *cli.Context) {
 				if !c.Args().Present() {
-					log.Fatalf("Account Number required field")
+					fmt.Println("Account Number required field")
 					os.Exit(1)
 				}
 				acctNum = c.Args().Get(0)
 				result, err := ws.DeleteAcct(context.Background(), &mb.DeleteAcctRequest{Acctnum: acctNum, Superkey: accessKey})
-				fmt.Println(result.Status)
 				if err != nil {
-					log.Fatalf("Bad Request: %v", err)
+					fmt.Printf("Bad Request: %v", err)
 					os.Exit(1)
 				}
+				fmt.Printf(`{"status": "%s", "accounts": []}`, result.Status)
 			},
 		},
 		{
@@ -167,12 +165,12 @@ func main() {
 			},
 			Action: func(c *cli.Context) {
 				if !c.Args().Present() {
-					log.Fatalf("Account Number required field")
+					fmt.Println("Account Number required field")
 					os.Exit(1)
 				}
 				acctNum = c.Args().Get(0)
 				if c.String("name") != "" && !validAcctName(c.String("name")) {
-					log.Fatalf("Invalid Account String: %q", c.String("name"))
+					fmt.Printf("Invalid Account String: %q", c.String("name"))
 					os.Exit(1)
 				}
 				modAcct := &mb.ModAccount{
@@ -182,11 +180,10 @@ func main() {
 				}
 				result, err := ws.UpdateAcct(context.Background(), &mb.UpdateAcctRequest{Acctnum: acctNum, Superkey: accessKey, ModAcct: modAcct})
 				if err != nil {
-					fmt.Println(result.Status)
-					log.Fatalf("Bad Request: %v", err)
+					fmt.Printf("Bad Request: %v", err)
 					os.Exit(1)
 				}
-				fmt.Printf(`{"accounts": [%s]}`, result.Payload)
+				fmt.Printf(`{"status": "OK", "accounts": [%s]}`, result.Payload)
 			},
 		},
 	}
