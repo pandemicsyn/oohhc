@@ -145,7 +145,7 @@ func (s *AccountAPIServer) DeleteAcct(ctx context.Context, r *mb.DeleteAcctReque
 	}
 	// only active accounts can be marked as deleted
 	if p.Status != "active" || p.DeleteDate != 0 {
-		return nil, errf(codes.InvalidArgument, "%s", "Incorrect Account Status")
+		return nil, errf(codes.InvalidArgument, "%s", "Passing Account Status")
 	}
 	// send delete to the group store
 	p.Status = "deleted"
