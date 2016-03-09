@@ -7,15 +7,15 @@ deps:
 	go get -u -f $(LOCALPKGS)
 
 build:
-	mkdir -p packaging/output
 	mkdir -p packaging/root/usr/local/bin
 	go build -i -v -o packaging/root/usr/local/bin/oohhc-cli github.com/letterj/oohhc/oohhc-cli
 	go build -i -v -o packaging/root/usr/local/bin/oohhc-acctd github.com/letterj/oohhc/acctd
 	go build -i -v -o packaging/root/usr/local/bin/oohhc-filesysd github.com/letterj/oohhc/filesysd
 
 clean:
-	rm -rf packaging/output
-	rm -f packaging/root/usr/local/bin
+	rm -f packaging/root/usr/local/bin/oohh-acctd
+	rm -f packaging/root/usr/local/bin/oohh-cli
+	rm -f packaging/root/usr/local/bin/oohh-filesysd
 
 install: build
 	cp -av packaging/root/usr/local/bin/* $(GOPATH)/bin
