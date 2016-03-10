@@ -70,7 +70,7 @@ func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctReque
 	if err != nil {
 		return nil, errf(codes.Internal, "%v", err)
 	}
-	return &mb.CreateAcctResponse{Status: "OK"}, nil
+	return &mb.CreateAcctResponse{Status: m}, nil
 }
 
 // ListAcct ...
@@ -159,7 +159,7 @@ func (s *AccountAPIServer) DeleteAcct(ctx context.Context, r *mb.DeleteAcctReque
 	if err != nil {
 		return nil, errf(codes.Internal, "%v", err)
 	}
-	return &mb.DeleteAcctResponse{Status: "OK"}, nil
+	return &mb.DeleteAcctResponse{Status: m}, nil
 }
 
 // UpdateAcct ...
