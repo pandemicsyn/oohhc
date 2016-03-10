@@ -90,7 +90,8 @@ func main() {
 					fmt.Printf("Bad Request: %v\n", err)
 					os.Exit(1)
 				}
-				fmt.Printf(`{"status": "%s", "accounts":[]}\n`, result.Status)
+				o := fmt.Sprintf(`{"status": "OK", "accounts":["id": "%s", "name": "%s"]}`, result.Status, acctName)
+				fmt.Println(o)
 			},
 		},
 		{
@@ -106,7 +107,8 @@ func main() {
 					fmt.Printf("Bad Request: %v\n", err)
 					os.Exit(1)
 				}
-				fmt.Printf(`{"status":, "OK", "accounts": [%s]}\n`, result.Payload)
+				o := fmt.Sprintf(`{"status": "OK", "accounts": [%s]}`, result.Payload)
+				fmt.Println(o)
 			},
 		},
 		{
@@ -123,7 +125,8 @@ func main() {
 					fmt.Printf("Bad Request: %v\n", err)
 					os.Exit(1)
 				}
-				fmt.Printf(`{"status": "OK", "accounts": [%s]}\n`, result.Payload)
+				o := fmt.Sprintf(`{"status": "OK", "accounts": [%s]}`, result.Payload)
+				fmt.Println(o)
 			},
 		},
 		{
@@ -140,7 +143,8 @@ func main() {
 					fmt.Printf("Bad Request: %v\n", err)
 					os.Exit(1)
 				}
-				fmt.Printf(`{"status": "%s", "accounts": []}\n`, result.Status)
+				o := fmt.Sprintf(`{"status": "OK", "accounts": ["id": "%s"]}`, result.Status)
+				fmt.Println(o)
 			},
 		},
 		{
@@ -183,7 +187,8 @@ func main() {
 					fmt.Printf("Bad Request: %v\n", err)
 					os.Exit(1)
 				}
-				fmt.Printf(`{"status": "OK", "accounts": [%s]}\n`, result.Payload)
+				o := fmt.Sprintf(`{"status": "OK", "accounts": [%s]}`, result.Payload)
+				fmt.Println(o)
 			},
 		},
 	}
