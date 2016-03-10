@@ -2,6 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"log"
+	"strings"
 	"time"
 
 	mb "github.com/letterj/oohhc/proto/account"
@@ -9,18 +12,19 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/peer"
 )
 
 var errf = grpc.Errorf
 
 // PayLoad ...
 type PayLoad struct {
-	ID         string
-	Name       string
-	Token      string
-	Status     string
-	CreateDate int64
-	DeleteDate int64
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Token      string `json:"token"`
+	Status     string `json:"status"`
+	CreateDate int64  `json:"createdate"`
+	DeleteDate int64  `json:"deletedate"`
 }
 
 // AccountAPIServer is used to implement grpchello.CfsAdminApiServer
@@ -37,13 +41,22 @@ func NewAccountAPIServer(acctws *AccountWS) *AccountAPIServer {
 
 // CreateAcct ...
 func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctRequest) (*mb.CreateAcctResponse, error) {
+	// Verify client is from 127.0.0.1
+	pr, _ := peer.FromContext(ctx)
+	if pr.Addr.String() != "127.0.0.1" {
+		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
+		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
+	}
 	// validate superapikey
 	if r.Superkey != s.acctws.superKey {
 		return nil, errf(codes.PermissionDenied, "%s", "Invalid Key")
 	}
-	// validate account string
+
 	// validate new account does not exit
-	//TODO:
+	err := s.duplicateName(r.Acctname)
+	if err != nil {
+		return nil, errf(codes.FailedPrecondition, "%v", err)
+	}
 
 	// create account information
 	// Group:		/acct
@@ -75,11 +88,16 @@ func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctReque
 
 // ListAcct ...
 func (s *AccountAPIServer) ListAcct(ctx context.Context, r *mb.ListAcctRequest) (*mb.ListAcctResponse, error) {
+	// Verify client is from 127.0.0.1
+	pr, _ := peer.FromContext(ctx)
+	if pr.Addr.String() != "127.0.0.1" {
+		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
+		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
+	}
 	// validate superapikey
 	if r.Superkey != s.acctws.superKey {
 		return nil, errf(codes.PermissionDenied, "%s", "Invalid Key")
 	}
-	// validate account string
 	// build the group store request
 	g := "/acct"
 
@@ -93,11 +111,16 @@ func (s *AccountAPIServer) ListAcct(ctx context.Context, r *mb.ListAcctRequest) 
 
 // ShowAcct ...
 func (s *AccountAPIServer) ShowAcct(ctx context.Context, r *mb.ShowAcctRequest) (*mb.ShowAcctResponse, error) {
+	// Verify client is from 127.0.0.1
+	pr, _ := peer.FromContext(ctx)
+	if pr.Addr.String() != "127.0.0.1" {
+		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
+		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
+	}
 	// validate superapikey
 	if r.Superkey != s.acctws.superKey {
 		return nil, errf(codes.PermissionDenied, "%s", "Invalid Key")
 	}
-	// validate account string
 
 	// build the group store request
 	g := "/acct"
@@ -121,11 +144,16 @@ func (s *AccountAPIServer) ShowAcct(ctx context.Context, r *mb.ShowAcctRequest) 
 
 // DeleteAcct ...
 func (s *AccountAPIServer) DeleteAcct(ctx context.Context, r *mb.DeleteAcctRequest) (*mb.DeleteAcctResponse, error) {
+	// Verify client is from 127.0.0.1
+	pr, _ := peer.FromContext(ctx)
+	if pr.Addr.String() != "127.0.0.1" {
+		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
+		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
+	}
 	// validate superapikey
 	if r.Superkey != s.acctws.superKey {
 		return nil, errf(codes.PermissionDenied, "%s", "Invalid Key")
 	}
-	// validate account string
 	// get information from the group store
 	g := "/acct"
 	m := r.Acctnum
@@ -164,11 +192,17 @@ func (s *AccountAPIServer) DeleteAcct(ctx context.Context, r *mb.DeleteAcctReque
 
 // UpdateAcct ...
 func (s *AccountAPIServer) UpdateAcct(ctx context.Context, r *mb.UpdateAcctRequest) (*mb.UpdateAcctResponse, error) {
+	// Verify client is from 127.0.0.1
+	pr, _ := peer.FromContext(ctx)
+	if pr.Addr.String() != "127.0.0.1" {
+		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
+		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
+	}
 	// validate superapikey
 	if r.Superkey != s.acctws.superKey {
 		return nil, errf(codes.PermissionDenied, "%s", "Invalid Key")
 	}
-	// validate account string
+
 	g := "/acct"
 	m := r.Acctnum
 
@@ -187,6 +221,11 @@ func (s *AccountAPIServer) UpdateAcct(ctx context.Context, r *mb.UpdateAcctReque
 	}
 	// update account information
 	if r.ModAcct.Name != "" {
+		// Check for duplicate Name
+		err = s.duplicateName(r.ModAcct.Name)
+		if err != nil {
+			return nil, errf(codes.FailedPrecondition, "%v", err)
+		}
 		p.Name = r.ModAcct.Name
 	}
 	if r.ModAcct.Status != "" {
@@ -218,4 +257,30 @@ func (s *AccountAPIServer) UpdateAcct(ctx context.Context, r *mb.UpdateAcctReque
 	}
 	// Good request return
 	return &mb.UpdateAcctResponse{Payload: uresult, Status: "OK"}, nil
+}
+
+// duplicateName will check to see if an account name already exists
+func (s *AccountAPIServer) duplicateName(acctName string) error {
+	var p PayLoad
+	g := "/acct"
+	// try and get account details form the group store
+	data, err := s.acctws.lookupGStore(g)
+	if err != nil {
+		// figure out something to do if
+		log.Printf("Problem talking to Group Store: %v", err)
+		return err
+	}
+	aList := strings.Split(data, ",")
+	for i := 0; i < len(aList); i++ {
+		err = json.Unmarshal([]byte(aList[i]), &p)
+		if err != nil {
+			log.Printf("Unmarshal Error: %v", err)
+			return err
+		}
+		if strings.ToLower(p.Name) == strings.ToLower(acctName) {
+			log.Printf("Account Name already exists: %s", acctName)
+			return errors.New("Account Name Exists")
+		}
+	}
+	return nil
 }
