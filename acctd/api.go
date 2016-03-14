@@ -43,7 +43,7 @@ func NewAccountAPIServer(acctws *AccountWS) *AccountAPIServer {
 func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctRequest) (*mb.CreateAcctResponse, error) {
 	// Verify client is from 127.0.0.1
 	pr, _ := peer.FromContext(ctx)
-	if pr.Addr.String() != "127.0.0.1" {
+	if strings.Split(pr.Addr.String(), ":")[0] != "127.0.0.1" {
 		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
 		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
 	}
@@ -90,7 +90,7 @@ func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctReque
 func (s *AccountAPIServer) ListAcct(ctx context.Context, r *mb.ListAcctRequest) (*mb.ListAcctResponse, error) {
 	// Verify client is from 127.0.0.1
 	pr, _ := peer.FromContext(ctx)
-	if pr.Addr.String() != "127.0.0.1" {
+	if strings.Split(pr.Addr.String(), ":")[0] != "127.0.0.1" {
 		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
 		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
 	}
@@ -113,7 +113,7 @@ func (s *AccountAPIServer) ListAcct(ctx context.Context, r *mb.ListAcctRequest) 
 func (s *AccountAPIServer) ShowAcct(ctx context.Context, r *mb.ShowAcctRequest) (*mb.ShowAcctResponse, error) {
 	// Verify client is from 127.0.0.1
 	pr, _ := peer.FromContext(ctx)
-	if pr.Addr.String() != "127.0.0.1" {
+	if strings.Split(pr.Addr.String(), ":")[0] != "127.0.0.1" {
 		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
 		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
 	}
@@ -146,7 +146,7 @@ func (s *AccountAPIServer) ShowAcct(ctx context.Context, r *mb.ShowAcctRequest) 
 func (s *AccountAPIServer) DeleteAcct(ctx context.Context, r *mb.DeleteAcctRequest) (*mb.DeleteAcctResponse, error) {
 	// Verify client is from 127.0.0.1
 	pr, _ := peer.FromContext(ctx)
-	if pr.Addr.String() != "127.0.0.1" {
+	if strings.Split(pr.Addr.String(), ":")[0] != "127.0.0.1" {
 		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
 		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
 	}
@@ -194,7 +194,7 @@ func (s *AccountAPIServer) DeleteAcct(ctx context.Context, r *mb.DeleteAcctReque
 func (s *AccountAPIServer) UpdateAcct(ctx context.Context, r *mb.UpdateAcctRequest) (*mb.UpdateAcctResponse, error) {
 	// Verify client is from 127.0.0.1
 	pr, _ := peer.FromContext(ctx)
-	if pr.Addr.String() != "127.0.0.1" {
+	if strings.Split(pr.Addr.String(), ":")[0] != "127.0.0.1" {
 		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
 		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
 	}

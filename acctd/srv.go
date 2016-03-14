@@ -41,7 +41,7 @@ func NewAccountWS(superkey string, gaddr string, insecureSkipVerify bool, grpcOp
 		}),
 		insecureSkipVerify: insecureSkipVerify,
 	}
-	a.gopts = append(a.gopts, grpc.WithTransportCredentials(a.gcreds))
+	//a.gopts = append(a.gopts, grpc.WithTransportCredentials(a.gcreds))
 	a.gconn, err = grpc.Dial(a.gaddr, a.gopts...)
 	if err != nil {
 		return &AccountWS{}, err
@@ -54,14 +54,8 @@ func NewAccountWS(superkey string, gaddr string, insecureSkipVerify bool, grpcOp
 // grpc Group Store functions
 // getGroupClient ...
 func (aws *AccountWS) getGClient() {
-	var opts []grpc.DialOption
-	var creds credentials.TransportAuthenticator
 	var err error
-	creds = credentials.NewTLS(&tls.Config{
-		InsecureSkipVerify: true,
-	})
-	opts = append(opts, grpc.WithTransportCredentials(creds))
-	aws.gconn, err = grpc.Dial(aws.gaddr, opts...)
+	aws.gconn, err = grpc.Dial(aws.gaddr, aws.gopts...)
 	if err != nil {
 		log.Fatalln(fmt.Sprintf("Failed to dial server: %s", err))
 	}
