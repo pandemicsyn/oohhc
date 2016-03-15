@@ -270,6 +270,9 @@ func (s *AccountAPIServer) duplicateName(acctName string) error {
 		log.Printf("Problem talking to Group Store: %v", err)
 		return err
 	}
+	if data == "" {
+		return nil
+	}
 	aList := strings.Split(data, ",")
 	for i := 0; i < len(aList); i++ {
 		err = json.Unmarshal([]byte(aList[i]), &p)
