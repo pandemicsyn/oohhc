@@ -47,17 +47,18 @@ func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctReque
 		log.Printf("Invalid Access attempt from %s", pr.Addr.String())
 		return nil, errf(codes.Canceled, "%s", "oohhc-acctd can only be accessed locally")
 	}
+	log.Printf("Connected from ip %s for a create operation", pr.Addr.String())
 	// validate superapikey
 	if r.Superkey != s.acctws.superKey {
 		return nil, errf(codes.PermissionDenied, "%s", "Invalid Key")
 	}
-
+	log.Println("Verified super key")
 	// validate new account does not exit
 	err := s.duplicateName(r.Acctname)
 	if err != nil {
 		return nil, errf(codes.FailedPrecondition, "%v", err)
 	}
-
+	log.Printf("Look for duplicate account name: %s", r.Acctname)
 	// create account information
 	// Group:		/acct
 	// Member:  "(uuid)"
@@ -78,11 +79,13 @@ func (s *AccountAPIServer) CreateAcct(ctx context.Context, r *mb.CreateAcctReque
 	if err != nil {
 		return nil, errf(codes.Internal, "%v", err)
 	}
+	log.Printf("Creating account number: %s", m)
 	// write information into the group store
 	_, err = s.acctws.writeGStore(g, m, d)
 	if err != nil {
 		return nil, errf(codes.Internal, "%v", err)
 	}
+	log.Printf("New account created for %s with id %s", r.Acctname, m)
 	return &mb.CreateAcctResponse{Status: m}, nil
 }
 
