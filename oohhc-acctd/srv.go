@@ -1,31 +1,27 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/gholt/brimtime"
+	"github.com/gholt/store"
+	"github.com/pandemicsyn/oort/api"
+	"github.com/spaolacci/murmur3"
 	"golang.org/x/net/context"
 
-	"github.com/gholt/brimtime"
-	gp "github.com/pandemicsyn/oort/api/groupproto"
-	"github.com/spaolacci/murmur3"
-
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // AccountWS the strurcture carrying all the extra stuff
 type AccountWS struct {
-	superKey           string
-	gaddr              string
-	gopts              []grpc.DialOption
-	gcreds             credentials.TransportAuthenticator
-	insecureSkipVerify bool
-	gconn              *grpc.ClientConn
-	gc                 gp.GroupStoreClient
+	superKey string
+	gaddr    string
+	gopts    []grpc.DialOption
+	gconn    *grpc.ClientConn
+	gstore   store.GroupStore
 }
 
 // NewAccountWS function used to create a new admin grpc web service
@@ -36,18 +32,13 @@ func NewAccountWS(superkey string, gaddr string, insecureSkipVerify bool, grpcOp
 		superKey: superkey,
 		gaddr:    gaddr,
 		gopts:    grpcOpts,
-		gcreds: credentials.NewTLS(&tls.Config{
-			InsecureSkipVerify: insecureSkipVerify,
-		}),
-		insecureSkipVerify: insecureSkipVerify,
 	}
 	//a.gopts = append(a.gopts, grpc.WithTransportCredentials(a.gcreds))
-	a.gconn, err = grpc.Dial(a.gaddr, a.gopts...)
+	a.gstore, err = api.NewGroupStore(a.gaddr, 10, a.gopts...)
 	if err != nil {
-		return &AccountWS{}, err
+		log.Fatalf("Unable to setup group store: %s", err.Error())
+		return nil, err
 	}
-	a.gc = gp.NewGroupStoreClient(a.gconn)
-	// TODO: this is copied from formicd so it doesn't reuse code.
 	return a, nil
 }
 
@@ -59,7 +50,10 @@ func (aws *AccountWS) getGClient() {
 	if err != nil {
 		log.Fatalln(fmt.Sprintf("Failed to dial server: %s", err))
 	}
-	aws.gc = gp.NewGroupStoreClient(aws.gconn)
+	aws.gstore, err = api.NewGroupStore(aws.gaddr, 10, aws.gopts...)
+	if err != nil {
+		log.Fatalf("Unable to setup group store: %s", err.Error())
+	}
 }
 
 // lookupAccount ...
@@ -67,26 +61,25 @@ func (aws *AccountWS) lookupGStore(g string) (string, error) {
 	if aws.gconn == nil {
 		aws.getGClient()
 	}
-	l := &gp.LookupGroupRequest{}
-	l.KeyA, l.KeyB = murmur3.Sum128([]byte(g))
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	res, err := aws.gc.LookupGroup(ctx, l)
-	if err != nil {
+	keyA, keyB := murmur3.Sum128([]byte(g))
+	items, err := aws.gstore.LookupGroup(context.Background(), keyA, keyB)
+	if store.IsNotFound(err) {
+		log.Printf("Not Found: %s", "acct")
+		return "", nil
+	} else if err != nil {
 		return "", err
 	}
-	m := make([]string, len(res.Items))
-	r := &gp.ReadRequest{}
-	for k, v := range res.Items {
-		r.KeyA = l.KeyA
-		r.KeyB = l.KeyB
-		r.ChildKeyA = v.ChildKeyA
-		r.ChildKeyB = v.ChildKeyB
-		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-		res, err := aws.gc.Read(ctx, r)
-		if err != nil {
+	// Build a list of accounts
+	m := make([]string, len(items))
+	for k, v := range items {
+		_, value, err := aws.gstore.Read(context.Background(), keyA, keyB, v.ChildKeyA, v.ChildKeyB, nil)
+		if store.IsNotFound(err) {
+			log.Printf("Detail Not Found in group list.  Key: %d, %d  ChildKey: %d, %d", keyA, keyB, v.ChildKeyA, v.ChildKeyB)
+			return "", nil
+		} else if err != nil {
 			return "", err
 		}
-		m[k] = fmt.Sprintf("%s", res.Value)
+		m[k] = fmt.Sprintf("%s", value)
 	}
 	return fmt.Sprintf(strings.Join(m, ",")), nil
 }
@@ -97,18 +90,15 @@ func (aws *AccountWS) writeGStore(g string, m string, p []byte) (string, error) 
 		aws.getGClient()
 	}
 
-	w := &gp.WriteRequest{}
 	// prepare groupVal and memberVal
-	w.KeyA, w.KeyB = murmur3.Sum128([]byte(g))
-	w.ChildKeyA, w.ChildKeyB = murmur3.Sum128([]byte(m))
-	w.Value = p
-	w.TimestampMicro = brimtime.TimeToUnixMicro(time.Now())
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	res, err := aws.gc.Write(ctx, w)
+	keyA, keyB := murmur3.Sum128([]byte(g))
+	childKeyA, childKeyB := murmur3.Sum128([]byte(m))
+	timestampMicro := brimtime.TimeToUnixMicro(time.Now())
+	_, err := aws.gstore.Write(context.Background(), keyA, keyB, childKeyA, childKeyB, timestampMicro, p)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("WRITE TSM: %d\nTSM: %d", w.TimestampMicro, res.TimestampMicro), nil
+	return fmt.Sprintf("TSM: %d", timestampMicro), nil
 }
 
 // lookupAccount ...
@@ -117,13 +107,14 @@ func (aws *AccountWS) getGStore(g string, m string) (string, error) {
 		aws.getGClient()
 	}
 	// TODO:
-	r := &gp.ReadRequest{}
-	r.KeyA, r.KeyB = murmur3.Sum128([]byte(g))
-	r.ChildKeyA, r.ChildKeyB = murmur3.Sum128([]byte(m))
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	res, err := aws.gc.Read(ctx, r)
-	if err != nil {
+	keyA, keyB := murmur3.Sum128([]byte(g))
+	childKeyA, childKeyB := murmur3.Sum128([]byte(m))
+	_, value, err := aws.gstore.Read(context.Background(), keyA, keyB, childKeyA, childKeyB, nil)
+	if store.IsNotFound(err) {
+		log.Printf("Detail Not Found in group list.  Key: %d, %d  ChildKey: %d, %d", keyA, keyB, childKeyA, childKeyB)
+		return "", nil
+	} else if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s", res.Value), nil
+	return fmt.Sprintf("%s", value), nil
 }
