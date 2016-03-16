@@ -39,6 +39,7 @@ func NewAccountWS(superkey string, gaddr string, insecureSkipVerify bool, grpcOp
 		log.Fatalf("Unable to setup group store: %s", err.Error())
 		return nil, err
 	}
+	log.Println("creating a new group store...")
 	return a, nil
 }
 
@@ -46,10 +47,7 @@ func NewAccountWS(superkey string, gaddr string, insecureSkipVerify bool, grpcOp
 // getGroupClient ...
 func (aws *AccountWS) getGClient() {
 	var err error
-	aws.gconn, err = grpc.Dial(aws.gaddr, aws.gopts...)
-	if err != nil {
-		log.Fatalln(fmt.Sprintf("Failed to dial server: %s", err))
-	}
+	log.Println("reconnecting to a new group store...")
 	aws.gstore, err = api.NewGroupStore(aws.gaddr, 10, aws.gopts...)
 	if err != nil {
 		log.Fatalf("Unable to setup group store: %s", err.Error())
@@ -61,6 +59,7 @@ func (aws *AccountWS) lookupGStore(g string) (string, error) {
 	if aws.gconn == nil {
 		aws.getGClient()
 	}
+	log.Println("Starting a Group Store Lookup")
 	keyA, keyB := murmur3.Sum128([]byte(g))
 	items, err := aws.gstore.LookupGroup(context.Background(), keyA, keyB)
 	if store.IsNotFound(err) {
@@ -69,7 +68,8 @@ func (aws *AccountWS) lookupGStore(g string) (string, error) {
 	} else if err != nil {
 		return "", err
 	}
-	// Build a list of accounts
+	// Build a list of accounts.
+	log.Println("Build a list of accounts")
 	m := make([]string, len(items))
 	for k, v := range items {
 		_, value, err := aws.gstore.Read(context.Background(), keyA, keyB, v.ChildKeyA, v.ChildKeyB, nil)
@@ -81,6 +81,7 @@ func (aws *AccountWS) lookupGStore(g string) (string, error) {
 		}
 		m[k] = fmt.Sprintf("%s", value)
 	}
+	log.Println("Returning a list of accounts")
 	return fmt.Sprintf(strings.Join(m, ",")), nil
 }
 
@@ -91,6 +92,7 @@ func (aws *AccountWS) writeGStore(g string, m string, p []byte) (string, error) 
 	}
 
 	// prepare groupVal and memberVal
+	log.Println("Starting a Write to the Group Store")
 	keyA, keyB := murmur3.Sum128([]byte(g))
 	childKeyA, childKeyB := murmur3.Sum128([]byte(m))
 	timestampMicro := brimtime.TimeToUnixMicro(time.Now())
@@ -98,6 +100,7 @@ func (aws *AccountWS) writeGStore(g string, m string, p []byte) (string, error) 
 	if err != nil {
 		return "", err
 	}
+	log.Println("Successfully wrote something to the Group Store")
 	return fmt.Sprintf("TSM: %d", timestampMicro), nil
 }
 
@@ -107,6 +110,7 @@ func (aws *AccountWS) getGStore(g string, m string) (string, error) {
 		aws.getGClient()
 	}
 	// TODO:
+	log.Println("Starting a Read from the Group Store")
 	keyA, keyB := murmur3.Sum128([]byte(g))
 	childKeyA, childKeyB := murmur3.Sum128([]byte(m))
 	_, value, err := aws.gstore.Read(context.Background(), keyA, keyB, childKeyA, childKeyB, nil)
@@ -116,5 +120,6 @@ func (aws *AccountWS) getGStore(g string, m string) (string, error) {
 	} else if err != nil {
 		return "", err
 	}
+	log.Println("Successfully read an item from the Group Store")
 	return fmt.Sprintf("%s", value), nil
 }
