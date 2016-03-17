@@ -289,6 +289,7 @@ func (s *AccountAPIServer) duplicateName(acctName string) error {
 	}
 	aList := strings.Split(data, ",")
 	log.Printf("Number of accounts in the list: %v", len(aList))
+	log.Printf("Account: %v", aList)
 	for i := 0; i < len(aList); i++ {
 		err = json.Unmarshal([]byte(aList[i]), &p)
 		if err != nil {
