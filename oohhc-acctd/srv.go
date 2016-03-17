@@ -79,7 +79,7 @@ func (aws *AccountWS) lookupGStore(g string) (string, error) {
 		} else if err != nil {
 			return "", err
 		}
-		m[k] = fmt.Sprintf("[%s,]", value)
+		m[k] = fmt.Sprintf("%s|", value)
 	}
 	log.Println("Returning a list of accounts")
 	return fmt.Sprintf(strings.Join(m, ",")), nil
