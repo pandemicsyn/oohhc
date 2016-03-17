@@ -96,7 +96,9 @@ func (aws *AccountWS) writeGStore(g string, m string, p []byte) (string, error) 
 	keyA, keyB := murmur3.Sum128([]byte(g))
 	childKeyA, childKeyB := murmur3.Sum128([]byte(m))
 	timestampMicro := brimtime.TimeToUnixMicro(time.Now())
-	_, err := aws.gstore.Write(context.Background(), keyA, keyB, childKeyA, childKeyB, timestampMicro, p)
+	// _, err := aws.gstore.Write(context.Background(), keyA, keyB, childKeyA, childKeyB, timestampMicro, p)
+	log.Printf("Writing %v", "test value")
+	_, err := aws.gstore.Write(context.Background(), keyA, keyB, childKeyA, childKeyB, timestampMicro, []byte("test value"))
 	if err != nil {
 		return "", err
 	}
