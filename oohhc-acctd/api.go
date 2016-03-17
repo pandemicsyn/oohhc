@@ -278,6 +278,7 @@ func (s *AccountAPIServer) duplicateName(acctName string) error {
 	g := "/acct"
 	// try and get account details form the group store
 	data, err := s.acctws.lookupGStore(g)
+	log.Printf("Data from the list: %v", data)
 	if err != nil {
 		// figure out something to do if
 		log.Printf("Problem talking to Group Store: %v", err)
@@ -287,6 +288,7 @@ func (s *AccountAPIServer) duplicateName(acctName string) error {
 		return nil
 	}
 	aList := strings.Split(data, ",")
+	log.Printf("Number of accounts in the list: %v", len(aList))
 	for i := 0; i < len(aList); i++ {
 		err = json.Unmarshal([]byte(aList[i]), &p)
 		if err != nil {
