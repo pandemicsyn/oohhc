@@ -291,14 +291,16 @@ func (s *AccountAPIServer) duplicateName(acctName string) error {
 	log.Printf("Number of accounts in the list: %v", len(aList))
 	log.Printf("Account: %v", aList)
 	for i := 0; i < len(aList); i++ {
-		err = json.Unmarshal([]byte(aList[i]), &p)
-		if err != nil {
-			log.Printf("Unmarshal Error: %v", err)
-			return err
-		}
-		if strings.ToLower(p.Name) == strings.ToLower(acctName) {
-			log.Printf("Account Name already exists: %s", acctName)
-			return errors.New("Account Name Exists")
+		if aList[i] != "" {
+			err = json.Unmarshal([]byte(aList[i]), &p)
+			if err != nil {
+				log.Printf("Unmarshal Error: %v", err)
+				return err
+			}
+			if strings.ToLower(p.Name) == strings.ToLower(acctName) {
+				log.Printf("Account Name already exists: %s", acctName)
+				return errors.New("Account Name Exists")
+			}
 		}
 	}
 	return nil
