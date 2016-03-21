@@ -250,8 +250,8 @@ func (s *AccountAPIServer) UpdateAcct(ctx context.Context, r *mb.UpdateAcctReque
 		}
 		p.Status = r.ModAcct.Status
 	}
-	if r.ModAcct.Token != "" && p.Status == "active" {
-		p.Token = r.ModAcct.Token
+	if r.ModAcct.Token == "true" && p.Status == "active" {
+		p.Token = uuid.NewV4().String()
 	}
 	// write new information to the group store
 	d, err := json.Marshal(p)

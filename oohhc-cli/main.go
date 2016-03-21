@@ -160,7 +160,7 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "token, T",
-					Value: "",
+					Value: "true",
 					Usage: "New token for the account",
 				},
 				cli.StringFlag{
