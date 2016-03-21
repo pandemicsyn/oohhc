@@ -79,10 +79,10 @@ func (aws *AccountWS) lookupGStore(g string) (string, error) {
 		} else if err != nil {
 			return "", err
 		}
-		m[k] = fmt.Sprintf("%s|", value)
+		m[k] = fmt.Sprintf("%s", value)
 	}
 	log.Println("Returning a list of accounts")
-	return fmt.Sprintf(strings.Join(m, ",")), nil
+	return fmt.Sprintf(strings.Join(m, "|")), nil
 }
 
 // lookupAccount ...
@@ -90,18 +90,17 @@ func (aws *AccountWS) writeGStore(g string, m string, p []byte) (string, error) 
 	if aws.gconn == nil {
 		aws.getGClient()
 	}
-
 	// prepare groupVal and memberVal
 	log.Println("Starting a Write to the Group Store")
 	keyA, keyB := murmur3.Sum128([]byte(g))
 	childKeyA, childKeyB := murmur3.Sum128([]byte(m))
 	timestampMicro := brimtime.TimeToUnixMicro(time.Now())
-	_, err := aws.gstore.Write(context.Background(), keyA, keyB, childKeyA, childKeyB, timestampMicro, p)
+	newTimestampMicro, err := aws.gstore.Write(context.Background(), keyA, keyB, childKeyA, childKeyB, timestampMicro, p)
 	if err != nil {
 		return "", err
 	}
 	log.Println("Successfully wrote something to the Group Store")
-	return fmt.Sprintf("TSM: %d", timestampMicro), nil
+	return fmt.Sprintf("TSM: %d", newTimestampMicro), nil
 }
 
 // lookupAccount ...

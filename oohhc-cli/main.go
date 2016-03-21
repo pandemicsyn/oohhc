@@ -109,7 +109,7 @@ func main() {
 					os.Exit(1)
 				}
 				aList := strings.Replace(result.Payload, "|", ",", -1)
-				o := fmt.Sprintf(`{"status": "OK", "accounts": %s}`, aList)
+				o := fmt.Sprintf(`{"status": "OK", "accounts": [%s]}`, aList)
 				fmt.Println(o)
 			},
 		},
