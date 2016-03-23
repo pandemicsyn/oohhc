@@ -1,4 +1,5 @@
 archive/
-acctd/acctd
+oohhc-acctd/oohhc-acctd
+oohhc-filesysd/oohhc-filesysd
 oohhc-cli/oohhc-cli
 packaging/root/usr/local/

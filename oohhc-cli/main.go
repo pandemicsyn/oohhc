@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"golang.org/x/net/context"
 
@@ -107,7 +108,8 @@ func main() {
 					fmt.Printf("Bad Request: %v\n", err)
 					os.Exit(1)
 				}
-				o := fmt.Sprintf(`{"status": "OK", "accounts": [%s]}`, result.Payload)
+				aList := strings.Replace(result.Payload, "|", ",", -1)
+				o := fmt.Sprintf(`{"status": "OK", "accounts": [%s]}`, aList)
 				fmt.Println(o)
 			},
 		},
@@ -158,7 +160,7 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "token, T",
-					Value: "",
+					Value: "true",
 					Usage: "New token for the account",
 				},
 				cli.StringFlag{
