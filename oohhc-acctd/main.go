@@ -43,27 +43,27 @@ func FatalIf(err error, msg string) {
 func main() {
 	flag.Parse()
 
-	envMutualtlsGS := os.Getenv("OOHHC_GS_MUTUALTLS")
+	envMutualtlsGS := os.Getenv("OOHHC_ACCT_GS_MUTUALTLS")
 	if envMutualtlsGS == "false" {
 		*mutualtlsGS = false
 	}
 
-	envInsecureSkipVerifyGS := os.Getenv("OOHHC_GS_SKIP_VERIFY")
+	envInsecureSkipVerifyGS := os.Getenv("OOHHC_ACCT_GS_SKIP_VERIFY")
 	if envInsecureSkipVerifyGS == "false" {
 		*insecureSkipVerify = false
 	}
 
-	envCertFileGS := os.Getenv("OOHHC_GS_CERT_FILE")
+	envCertFileGS := os.Getenv("OOHHC_ACCT_GS_CERT_FILE")
 	if envCertFileGS != "" {
 		*certFileGS = envCertFileGS
 	}
 
-	envKeyFileGS := os.Getenv("OOHHC_GS_KEY_FILE")
+	envKeyFileGS := os.Getenv("OOHHC_ACCT_GS_KEY_FILE")
 	if envKeyFileGS != "" {
 		*keyFileGS = envKeyFileGS
 	}
 
-	envCAFileGS := os.Getenv("OOHHC_GS_CA_FILE")
+	envCAFileGS := os.Getenv("OOHHC_ACCT_GS_CA_FILE")
 	if envCAFileGS != "" {
 		*caFileGS = envCAFileGS
 	}
@@ -73,7 +73,7 @@ func main() {
 		*usetls = false
 	}
 
-	envoortghost := os.Getenv("OOHHC_OORT_GROUP_HOST")
+	envoortghost := os.Getenv("OOHHC_ACCT_OORT_GROUP_HOST")
 	if envoortghost != "" {
 		*oortGroupHost = envoortghost
 	}
