@@ -1,4 +1,8 @@
 # oohhc
+Pronounced:  
+
+o͝ohēk
+
 A simple set of management servers and an admin client for metadata that uses the group store for persistent storage.
 
 
