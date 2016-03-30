@@ -1,69 +1,56 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/gholt/brimtime"
+	"github.com/gholt/store"
+	"github.com/pandemicsyn/oort/api"
+	"github.com/spaolacci/murmur3"
 	"golang.org/x/net/context"
 
-	"github.com/gholt/brimtime"
-	gp "github.com/pandemicsyn/oort/api/groupproto"
-	"github.com/spaolacci/murmur3"
-
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // FileSystemWS the strurcture carrying all the extra stuff
 type FileSystemWS struct {
-	gaddr              string
-	gopts              []grpc.DialOption
-	gcreds             credentials.TransportAuthenticator
-	insecureSkipVerify bool
-	gconn              *grpc.ClientConn
-	gc                 gp.GroupStoreClient
+	gaddr  string
+	gopts  []grpc.DialOption
+	gconn  *grpc.ClientConn
+	gstore store.GroupStore
 }
 
 // NewFileSystemWS function used to create a new admin grpc web service
 func NewFileSystemWS(gaddr string, insecureSkipVerify bool, grpcOpts ...grpc.DialOption) (*FileSystemWS, error) {
 	// TODO: This all eventually needs to replaced with group rings
+
 	var err error
 	fs := &FileSystemWS{
 		gaddr: gaddr,
 		gopts: grpcOpts,
-		gcreds: credentials.NewTLS(&tls.Config{
-			InsecureSkipVerify: insecureSkipVerify,
-		}),
-		insecureSkipVerify: insecureSkipVerify,
 	}
-	fs.gopts = append(fs.gopts, grpc.WithTransportCredentials(fs.gcreds))
-	fs.gconn, err = grpc.Dial(fs.gaddr, fs.gopts...)
+	fs.gstore, err = api.NewGroupStore(fs.gaddr, 10, fs.gopts...)
 	if err != nil {
-		return &FileSystemWS{}, err
+		log.Fatalf("Unable to setup group store: %s", err.Error())
+		return nil, err
 	}
-	fs.gc = gp.NewGroupStoreClient(fs.gconn)
-	// TODO: this is copied from formicd so it doesn't reuse code.
+	log.Println("creating a new group store...")
 	return fs, nil
 }
 
 // grpc Group Store functions
 // getGroupClient ...
 func (fsws *FileSystemWS) getGClient() {
-	var opts []grpc.DialOption
-	var creds credentials.TransportAuthenticator
 	var err error
-	creds = credentials.NewTLS(&tls.Config{
-		InsecureSkipVerify: true,
-	})
-	opts = append(opts, grpc.WithTransportCredentials(creds))
-	fsws.gconn, err = grpc.Dial(fsws.gaddr, opts...)
+
+	log.Println("reconnecting to a new group store...")
+	fsws.gstore, err = api.NewGroupStore(fsws.gaddr, 10, fsws.gopts...)
 	if err != nil {
-		log.Fatalln(fmt.Sprintf("Failed to dial server: %s", err))
+		log.Fatalf("Unable to setup group store: %s", err.Error())
 	}
-	fsws.gc = gp.NewGroupStoreClient(fsws.gconn)
 }
 
 // lookupAccount ...
@@ -71,28 +58,30 @@ func (fsws *FileSystemWS) lookupGStore(g string) (string, error) {
 	if fsws.gconn == nil {
 		fsws.getGClient()
 	}
-	l := &gp.LookupGroupRequest{}
-	l.KeyA, l.KeyB = murmur3.Sum128([]byte(g))
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	res, err := fsws.gc.LookupGroup(ctx, l)
-	if err != nil {
+	log.Println("Starting a Group Store Lookup")
+	keyA, keyB := murmur3.Sum128([]byte(g))
+	items, err := fsws.gstore.LookupGroup(context.Background(), keyA, keyB)
+	if store.IsNotFound(err) {
+		log.Printf("Not Found: %s", "acct")
+		return "", nil
+	} else if err != nil {
 		return "", err
 	}
-	m := make([]string, len(res.Items))
-	r := &gp.ReadRequest{}
-	for k, v := range res.Items {
-		r.KeyA = l.KeyA
-		r.KeyB = l.KeyB
-		r.ChildKeyA = v.ChildKeyA
-		r.ChildKeyB = v.ChildKeyB
-		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-		res, err := fsws.gc.Read(ctx, r)
-		if err != nil {
+	// Build a list of accounts.
+	log.Println("Build a list of file systems")
+	m := make([]string, len(items))
+	for k, v := range items {
+		_, value, err := fsws.gstore.Read(context.Background(), keyA, keyB, v.ChildKeyA, v.ChildKeyB, nil)
+		if store.IsNotFound(err) {
+			log.Printf("Detail Not Found in group list.  Key: %d, %d  ChildKey: %d, %d", keyA, keyB, v.ChildKeyA, v.ChildKeyB)
+			return "", nil
+		} else if err != nil {
 			return "", err
 		}
-		m[k] = fmt.Sprintf("%s", res.Value)
+		m[k] = fmt.Sprintf("%s", value)
 	}
-	return fmt.Sprintf(strings.Join(m, ",")), nil
+	log.Println("Returning a list of file systems")
+	return fmt.Sprintf(strings.Join(m, "|")), nil
 }
 
 // lookupAccount ...
@@ -100,19 +89,17 @@ func (fsws *FileSystemWS) writeGStore(g string, m string, p []byte) (string, err
 	if fsws.gconn == nil {
 		fsws.getGClient()
 	}
-
-	w := &gp.WriteRequest{}
 	// prepare groupVal and memberVal
-	w.KeyA, w.KeyB = murmur3.Sum128([]byte(g))
-	w.ChildKeyA, w.ChildKeyB = murmur3.Sum128([]byte(m))
-	w.Value = p
-	w.TimestampMicro = brimtime.TimeToUnixMicro(time.Now())
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	res, err := fsws.gc.Write(ctx, w)
+	log.Println("Starting a Write to the Group Store")
+	keyA, keyB := murmur3.Sum128([]byte(g))
+	childKeyA, childKeyB := murmur3.Sum128([]byte(m))
+	timestampMicro := brimtime.TimeToUnixMicro(time.Now())
+	newTimestampMicro, err := fsws.gstore.Write(context.Background(), keyA, keyB, childKeyA, childKeyB, timestampMicro, p)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("WRITE TSM: %d\nTSM: %d", w.TimestampMicro, res.TimestampMicro), nil
+	log.Println("Successfully wrote something to the Group Store")
+	return fmt.Sprintf("TSM: %d", newTimestampMicro), nil
 }
 
 // lookupAccount ...
@@ -120,14 +107,16 @@ func (fsws *FileSystemWS) getGStore(g string, m string) (string, error) {
 	if fsws.gconn == nil {
 		fsws.getGClient()
 	}
-	// TODO:
-	r := &gp.ReadRequest{}
-	r.KeyA, r.KeyB = murmur3.Sum128([]byte(g))
-	r.ChildKeyA, r.ChildKeyB = murmur3.Sum128([]byte(m))
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	res, err := fsws.gc.Read(ctx, r)
-	if err != nil {
+	log.Println("Starting a Read from the Group Store")
+	keyA, keyB := murmur3.Sum128([]byte(g))
+	childKeyA, childKeyB := murmur3.Sum128([]byte(m))
+	_, value, err := fsws.gstore.Read(context.Background(), keyA, keyB, childKeyA, childKeyB, nil)
+	if store.IsNotFound(err) {
+		log.Printf("Detail Not Found in group list.  Key: %d, %d  ChildKey: %d, %d", keyA, keyB, childKeyA, childKeyB)
+		return "", nil
+	} else if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s", res.Value), nil
+	log.Println("Successfully read an item from the Group Store")
+	return fmt.Sprintf("%s", value), nil
 }
