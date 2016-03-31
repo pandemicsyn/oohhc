@@ -112,11 +112,16 @@ func (fsws *FileSystemWS) getGStore(g string, m string) (string, error) {
 	childKeyA, childKeyB := murmur3.Sum128([]byte(m))
 	_, value, err := fsws.gstore.Read(context.Background(), keyA, keyB, childKeyA, childKeyB, nil)
 	if store.IsNotFound(err) {
-		log.Printf("Detail Not Found in group list.  Key: %d, %d  ChildKey: %d, %d", keyA, keyB, childKeyA, childKeyB)
+		log.Printf(" Not Found  Key: %d, %d  ChildKey: %d, %d", keyA, keyB, childKeyA, childKeyB)
 		return "", nil
 	} else if err != nil {
 		return "", err
 	}
 	log.Println("Successfully read an item from the Group Store")
 	return fmt.Sprintf("%s", value), nil
+}
+
+// lookupAccount ...
+func (fsws *FileSystemWS) lookupItems(g string) (string, error) {
+	return fmt.Sprintf("%s", "test"), nil
 }

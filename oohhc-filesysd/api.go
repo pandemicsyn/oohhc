@@ -250,7 +250,9 @@ func (s *FileSystemAPIServer) GrantAddrFS(ctx context.Context, r *fb.GrantAddrFS
 		log.Printf("Error %v on lookup for account %s", err, r.Acctnum)
 		return nil, err
 	}
-
+	if fsData.Status == "active" {
+		log.Println("FileSystem is active")
+	}
 	// Check for duplicate addresses
 	fsaddr := fmt.Sprintf("/acct/%s/fs/%s/addr", acctData.ID, r.FSName)
 	err = s.dupNameCheck(fsaddr, r.Addr)
