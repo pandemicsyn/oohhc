@@ -14,6 +14,7 @@ service FileSystemAPI {
   rpc UpdateFS (UpdateFSRequest) returns (UpdateFSResponse) {}
   rpc GrantAddrFS (GrantAddrFSRequest) returns (GrantAddrFSResponse) {}
   rpc RevokeAddrFS (RevokeAddrFSRequest) returns (RevokeAddrFSResponse) {}
+  rpc LookupAddrFS (LookupAddrFSRequest) returns (LookupAddrFSResponse) {}
 }
 
 // ModFS ...
@@ -51,7 +52,7 @@ message ListFSResponse {
 // Request to show the specific details about a file system
 message ShowFSRequest{
   string  Acctnum         = 1;
-  string  FSName          = 2;
+  string  FSid            = 2;
   string  Token           = 3;
 }
 
@@ -64,7 +65,7 @@ message ShowFSResponse {
 // Request to delete a specific file system
 message DeleteFSRequest {
   string  Acctnum         = 1;
-  string  FSName          = 2;
+  string  FSid            = 2;
   string  Token           = 3;
 }
 
@@ -77,7 +78,7 @@ message DeleteFSResponse {
 // Request to update a specific file system's information
 message UpdateFSRequest {
   string  Acctnum         = 1;
-  string  FSName          = 2;
+  string  FSid            = 2;
   string  Token           = 3;
   ModFS   Filesys         = 4;
 }
@@ -91,7 +92,7 @@ message UpdateFSResponse {
 // Request grant an ip address access to a file system
 message GrantAddrFSRequest {
   string  Acctnum    = 1;
-  string  FSName     = 2;
+  string  FSid       = 2;
   string  Token      = 3;
   string  Addr       = 4;
 }
@@ -104,7 +105,7 @@ message GrantAddrFSResponse {
 // Request revoke an ip address access to a file system
 message RevokeAddrFSRequest {
   string Acctnum    = 1;
-  string FSName     = 2;
+  string FSid       = 2;
   string Token      = 3;
   string Addr       = 4;
 }
@@ -112,4 +113,14 @@ message RevokeAddrFSRequest {
 // Response from revoking ip address access to a file system
 message RevokeAddrFSResponse {
   string  Status     = 1;
+}
+
+// Request filesystem lookup
+message LookupAddrFSRequest {
+  string  FSid       = 1;
+  string  Addr       = 2;
+}
+
+message LookupAddrFSResponse {
+  string status      = 1;
 }

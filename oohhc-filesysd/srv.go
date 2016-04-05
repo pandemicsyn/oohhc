@@ -54,15 +54,15 @@ func (fsws *FileSystemWS) getGClient() {
 }
 
 // lookupAccount ...
-func (fsws *FileSystemWS) lookupGStore(g string) (string, error) {
+func (fsws *FileSystemWS) readGroupGStore(g string) (string, error) {
 	if fsws.gconn == nil {
 		fsws.getGClient()
 	}
 	log.Println("Starting a Group Store Lookup")
 	keyA, keyB := murmur3.Sum128([]byte(g))
-	items, err := fsws.gstore.LookupGroup(context.Background(), keyA, keyB)
+	items, err := fsws.gstore.ReadGroup(context.Background(), keyA, keyB)
 	if store.IsNotFound(err) {
-		log.Printf("Not Found: %s", "acct")
+		log.Printf("Not Found: %s", g)
 		return "", nil
 	} else if err != nil {
 		return "", err
@@ -71,20 +71,13 @@ func (fsws *FileSystemWS) lookupGStore(g string) (string, error) {
 	log.Println("Build a list of file systems")
 	m := make([]string, len(items))
 	for k, v := range items {
-		_, value, err := fsws.gstore.Read(context.Background(), keyA, keyB, v.ChildKeyA, v.ChildKeyB, nil)
-		if store.IsNotFound(err) {
-			log.Printf("Detail Not Found in group list.  Key: %d, %d  ChildKey: %d, %d", keyA, keyB, v.ChildKeyA, v.ChildKeyB)
-			return "", nil
-		} else if err != nil {
-			return "", err
-		}
-		m[k] = fmt.Sprintf("%s", value)
+		m[k] = fmt.Sprintf("%s", v.Value)
 	}
 	log.Println("Returning a list of file systems")
 	return fmt.Sprintf(strings.Join(m, "|")), nil
 }
 
-// lookupAccount ...
+// writeGStore ...
 func (fsws *FileSystemWS) writeGStore(g string, m string, p []byte) (string, error) {
 	if fsws.gconn == nil {
 		fsws.getGClient()
