@@ -21,7 +21,7 @@ var (
 	usetls             = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
 	certFile           = flag.String("cert_file", "/etc/oort/server.crt", "The TLS cert file")
 	keyFile            = flag.String("key_file", "/etc/oort/server.key", "The TLS key file")
-	port               = flag.Int("port", 8449, "The acctd server port")
+	port               = flag.Int("port", 8448, "The filesysd server port")
 	oortGroupHost      = flag.String("oortgrouphost", "127.0.0.1:6380", "host:port to use when connecting to oort group")
 	insecureSkipVerify = flag.Bool("skipverify", true, "don't verify cert")
 	// Group Store Values
