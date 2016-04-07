@@ -135,7 +135,8 @@ func main() {
 				}
 				u, err := url.Parse(c.Args().Get(0))
 				if err != nil {
-					panic(err)
+					fmt.Println("Invalid url scheme")
+					os.Exit(1)
 				}
 				fmt.Println(u.Scheme)
 				acctNum = u.Host
@@ -169,7 +170,8 @@ func main() {
 				}
 				u, err := url.Parse(c.Args().Get(0))
 				if err != nil {
-					panic(err)
+					fmt.Println("Invalid url scheme")
+					os.Exit(1)
 				}
 				fmt.Println(u.Scheme)
 				acctNum = u.Host
@@ -213,6 +215,7 @@ func main() {
 				u, err := url.Parse(c.Args().Get(0))
 				if err != nil {
 					fmt.Printf("Url Parse error: %v", err)
+					os.Exit(1)
 				}
 				fmt.Println(u.Scheme)
 				acctNum = u.Host
@@ -255,6 +258,7 @@ func main() {
 				}
 				if token == "" {
 					fmt.Println("Token is required")
+					os.Exit(1)
 				}
 				if c.String("addr") == "" {
 					fmt.Println("addr is required")
@@ -262,7 +266,8 @@ func main() {
 				}
 				u, err := url.Parse(c.Args().Get(0))
 				if err != nil {
-					panic(err)
+					fmt.Println("Invalid url scheme")
+					os.Exit(1)
 				}
 				fmt.Println(u.Scheme)
 				acctNum = u.Host
@@ -286,7 +291,7 @@ func main() {
 				cli.StringFlag{
 					Name:  "addr",
 					Value: "",
-					Usage: "Address to Grant",
+					Usage: "Address to Revoke",
 				},
 			},
 			Action: func(c *cli.Context) {
@@ -296,6 +301,7 @@ func main() {
 				}
 				if token == "" {
 					fmt.Println("Token is required")
+					os.Exit(1)
 				}
 				if c.String("addr") == "" {
 					fmt.Println("addr is required")
@@ -303,7 +309,8 @@ func main() {
 				}
 				u, err := url.Parse(c.Args().Get(0))
 				if err != nil {
-					panic(err)
+					fmt.Println("Invalid url scheme")
+					os.Exit(1)
 				}
 				fmt.Println(u.Scheme)
 				acctNum = u.Host
@@ -311,6 +318,44 @@ func main() {
 				conn := setupWS(serverAddr)
 				ws := mb.NewFileSystemAPIClient(conn)
 				result, err := ws.RevokeAddrFS(context.Background(), &mb.RevokeAddrFSRequest{Acctnum: acctNum, FSid: fsNum, Token: token, Addr: c.String("addr")})
+				if err != nil {
+					log.Fatalf("Bad Request: %v", err)
+					conn.Close()
+					os.Exit(1)
+				}
+				conn.Close()
+				log.Printf("Result: %s\n", result.Status)
+			},
+		},
+		{
+			Name:  "verify",
+			Usage: "Verify an Addr has access to a file system",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "addr",
+					Value: "",
+					Usage: "Address to check",
+				},
+			},
+			Action: func(c *cli.Context) {
+				if !c.Args().Present() {
+					fmt.Println("Invalid syntax for revoke.")
+					os.Exit(1)
+				}
+				if c.String("addr") == "" {
+					fmt.Println("addr is required")
+					os.Exit(1)
+				}
+				u, err := url.Parse(c.Args().Get(0))
+				if err != nil {
+					fmt.Println("Invalid url scheme")
+					os.Exit(1)
+				}
+				fmt.Println(u.Scheme)
+				fsNum = u.Host
+				conn := setupWS(serverAddr)
+				ws := mb.NewFileSystemAPIClient(conn)
+				result, err := ws.LookupAddrFS(context.Background(), &mb.LookupAddrFSRequest{FSid: fsNum, Addr: c.String("addr")})
 				if err != nil {
 					log.Fatalf("Bad Request: %v", err)
 					conn.Close()
