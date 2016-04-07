@@ -27,7 +27,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "fstest"
 	app.Usage = "Client used to test filesysd"
-	app.Version = "0.0.1"
+	app.Version = "0.0.2"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "token, T",
@@ -48,19 +48,12 @@ func main() {
 		{
 			Name:  "show",
 			Usage: "Show a File Systems",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "T, token",
-					Value: "",
-					Usage: "Token",
-				},
-			},
 			Action: func(c *cli.Context) {
-				if c.Args().Present() {
-					fmt.Println("Invalid syntax for create.")
+				if !c.Args().Present() {
+					fmt.Println("Invalid syntax for show.")
 					os.Exit(1)
 				}
-				if c.String("token") == "" {
+				if token == "" {
 					fmt.Println("Token is required")
 				}
 				u, err := url.Parse(c.Args().Get(0))
@@ -72,7 +65,87 @@ func main() {
 				fsNum = u.Path[1:]
 				conn := setupWS(serverAddr)
 				ws := mb.NewFileSystemAPIClient(conn)
-				result, err := ws.ShowFS(context.Background(), &mb.ShowFSRequest{Acctnum: acctNum, FSid: fsNum, Token: c.String("token")})
+				result, err := ws.ShowFS(context.Background(), &mb.ShowFSRequest{Acctnum: acctNum, FSid: fsNum, Token: token})
+				if err != nil {
+					log.Fatalf("Bad Request: %v", err)
+					conn.Close()
+					os.Exit(1)
+				}
+				conn.Close()
+				log.Printf("Result: %s\n", result.Status)
+				log.Printf("SHOW Results: %s", result.Payload)
+			},
+		},
+		{
+			Name:  "create",
+			Usage: "Create a File Systems",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name, N",
+					Value: "",
+					Usage: "Name of the file system",
+				},
+			},
+			Action: func(c *cli.Context) {
+				if !c.Args().Present() {
+					fmt.Println("Invalid syntax for show.")
+					os.Exit(1)
+				}
+				if token == "" {
+					fmt.Println("Token is required")
+				}
+				u, err := url.Parse(c.Args().Get(0))
+				if err != nil {
+					fmt.Printf("Url parse error: %v", err)
+					os.Exit(1)
+				}
+				fmt.Println(u.Scheme)
+				acctNum = u.Host
+				if u.Path != "" {
+					fmt.Println("Invalid url scheme")
+					os.Exit(1)
+				}
+				if c.String("name") == "" {
+					fmt.Println("File system name is a required field.")
+					os.Exit(1)
+				}
+				conn := setupWS(serverAddr)
+				ws := mb.NewFileSystemAPIClient(conn)
+				result, err := ws.CreateFS(context.Background(), &mb.CreateFSRequest{Acctnum: acctNum, FSName: c.String("Name"), Token: token})
+				if err != nil {
+					log.Fatalf("Bad Request: %v", err)
+					conn.Close()
+					os.Exit(1)
+				}
+				conn.Close()
+				log.Printf("Result: %s\n", result.Status)
+				log.Printf("Create Results: %s", result.Payload)
+			},
+		},
+		{
+			Name:  "list",
+			Usage: "List File Systems for an account",
+			Action: func(c *cli.Context) {
+				if !c.Args().Present() {
+					fmt.Println("Invalid syntax for list.")
+					os.Exit(1)
+				}
+				if token == "" {
+					fmt.Println("Token is required")
+				}
+				u, err := url.Parse(c.Args().Get(0))
+				if err != nil {
+					panic(err)
+				}
+				fmt.Println(u.Scheme)
+				acctNum = u.Host
+				if u.Path != "" {
+					fmt.Println("Invaid url")
+					os.Exit(1)
+				}
+				conn := setupWS(serverAddr)
+				ws := mb.NewFileSystemAPIClient(conn)
+				result, err := ws.ListFS(context.Background(), &mb.ListFSRequest{Acctnum: acctNum, Token: token})
 				if err != nil {
 					log.Fatalf("Bad Request: %v", err)
 					conn.Close()
@@ -81,6 +154,170 @@ func main() {
 				conn.Close()
 				log.Printf("Result: %s\n", result.Status)
 				log.Printf("LIST Results: %s", result.Payload)
+			},
+		},
+		{
+			Name:  "delete",
+			Usage: "Delete a File Systems",
+			Action: func(c *cli.Context) {
+				if !c.Args().Present() {
+					fmt.Println("Invalid syntax for delete.")
+					os.Exit(1)
+				}
+				if token == "" {
+					fmt.Println("Token is required")
+				}
+				u, err := url.Parse(c.Args().Get(0))
+				if err != nil {
+					panic(err)
+				}
+				fmt.Println(u.Scheme)
+				acctNum = u.Host
+				fsNum = u.Path[1:]
+				conn := setupWS(serverAddr)
+				ws := mb.NewFileSystemAPIClient(conn)
+				result, err := ws.DeleteFS(context.Background(), &mb.DeleteFSRequest{Acctnum: acctNum, FSid: fsNum, Token: token})
+				if err != nil {
+					log.Fatalf("Bad Request: %v", err)
+					conn.Close()
+					os.Exit(1)
+				}
+				conn.Close()
+				log.Printf("Result: %s\n", result.Status)
+				log.Printf("Delete Results: %s", result.Payload)
+			},
+		},
+		{
+			Name:  "update",
+			Usage: "Update a File Systems",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name, N",
+					Value: "",
+					Usage: "Name of the file system",
+				},
+				cli.StringFlag{
+					Name:  "S, status",
+					Value: "",
+					Usage: "Status of the file system",
+				},
+			},
+			Action: func(c *cli.Context) {
+				if !c.Args().Present() {
+					fmt.Println("Invalid syntax for delete.")
+					os.Exit(1)
+				}
+				if token == "" {
+					fmt.Println("Token is required")
+				}
+				u, err := url.Parse(c.Args().Get(0))
+				if err != nil {
+					fmt.Printf("Url Parse error: %v", err)
+				}
+				fmt.Println(u.Scheme)
+				acctNum = u.Host
+				fsNum = u.Path[1:]
+				if c.String("name") != "" && !validAcctName(c.String("name")) {
+					fmt.Printf("Invalid File System String: %q\n", c.String("name"))
+					os.Exit(1)
+				}
+				fsMod := &mb.ModFS{
+					Name:   c.String("name"),
+					Status: c.String("status"),
+				}
+				conn := setupWS(serverAddr)
+				ws := mb.NewFileSystemAPIClient(conn)
+				result, err := ws.UpdateFS(context.Background(), &mb.UpdateFSRequest{Acctnum: acctNum, FSid: fsNum, Token: token, Filesys: fsMod})
+				if err != nil {
+					log.Fatalf("Bad Request: %v", err)
+					conn.Close()
+					os.Exit(1)
+				}
+				conn.Close()
+				log.Printf("Result: %s\n", result.Status)
+				log.Printf("Update Results: %s", result.Payload)
+			},
+		},
+		{
+			Name:  "grant",
+			Usage: "Grant an Addr access to a File Systems",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "addr",
+					Value: "",
+					Usage: "Address to Grant",
+				},
+			},
+			Action: func(c *cli.Context) {
+				if !c.Args().Present() {
+					fmt.Println("Invalid syntax for delete.")
+					os.Exit(1)
+				}
+				if token == "" {
+					fmt.Println("Token is required")
+				}
+				if c.String("addr") == "" {
+					fmt.Println("addr is required")
+					os.Exit(1)
+				}
+				u, err := url.Parse(c.Args().Get(0))
+				if err != nil {
+					panic(err)
+				}
+				fmt.Println(u.Scheme)
+				acctNum = u.Host
+				fsNum = u.Path[1:]
+				conn := setupWS(serverAddr)
+				ws := mb.NewFileSystemAPIClient(conn)
+				result, err := ws.GrantAddrFS(context.Background(), &mb.GrantAddrFSRequest{Acctnum: acctNum, FSid: fsNum, Token: token, Addr: c.String("addr")})
+				if err != nil {
+					log.Fatalf("Bad Request: %v", err)
+					conn.Close()
+					os.Exit(1)
+				}
+				conn.Close()
+				log.Printf("Result: %s\n", result.Status)
+			},
+		},
+		{
+			Name:  "revoke",
+			Usage: "Revoke an Addr's access to a File Systems",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "addr",
+					Value: "",
+					Usage: "Address to Grant",
+				},
+			},
+			Action: func(c *cli.Context) {
+				if !c.Args().Present() {
+					fmt.Println("Invalid syntax for revoke.")
+					os.Exit(1)
+				}
+				if token == "" {
+					fmt.Println("Token is required")
+				}
+				if c.String("addr") == "" {
+					fmt.Println("addr is required")
+					os.Exit(1)
+				}
+				u, err := url.Parse(c.Args().Get(0))
+				if err != nil {
+					panic(err)
+				}
+				fmt.Println(u.Scheme)
+				acctNum = u.Host
+				fsNum = u.Path[1:]
+				conn := setupWS(serverAddr)
+				ws := mb.NewFileSystemAPIClient(conn)
+				result, err := ws.RevokeAddrFS(context.Background(), &mb.RevokeAddrFSRequest{Acctnum: acctNum, FSid: fsNum, Token: token, Addr: c.String("addr")})
+				if err != nil {
+					log.Fatalf("Bad Request: %v", err)
+					conn.Close()
+					os.Exit(1)
+				}
+				conn.Close()
+				log.Printf("Result: %s\n", result.Status)
 			},
 		},
 	}
