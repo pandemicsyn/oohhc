@@ -24,6 +24,8 @@
 		GrantAddrFSResponse
 		RevokeAddrFSRequest
 		RevokeAddrFSResponse
+		LookupAddrFSRequest
+		LookupAddrFSResponse
 */
 package filesystem
 
@@ -98,7 +100,7 @@ func (*ListFSResponse) ProtoMessage()    {}
 // Request to show the specific details about a file system
 type ShowFSRequest struct {
 	Acctnum string `protobuf:"bytes,1,opt,name=Acctnum,proto3" json:"Acctnum,omitempty"`
-	FSName  string `protobuf:"bytes,2,opt,name=FSName,proto3" json:"FSName,omitempty"`
+	FSid    string `protobuf:"bytes,2,opt,name=FSid,proto3" json:"FSid,omitempty"`
 	Token   string `protobuf:"bytes,3,opt,name=Token,proto3" json:"Token,omitempty"`
 }
 
@@ -119,7 +121,7 @@ func (*ShowFSResponse) ProtoMessage()    {}
 // Request to delete a specific file system
 type DeleteFSRequest struct {
 	Acctnum string `protobuf:"bytes,1,opt,name=Acctnum,proto3" json:"Acctnum,omitempty"`
-	FSName  string `protobuf:"bytes,2,opt,name=FSName,proto3" json:"FSName,omitempty"`
+	FSid    string `protobuf:"bytes,2,opt,name=FSid,proto3" json:"FSid,omitempty"`
 	Token   string `protobuf:"bytes,3,opt,name=Token,proto3" json:"Token,omitempty"`
 }
 
@@ -140,7 +142,7 @@ func (*DeleteFSResponse) ProtoMessage()    {}
 // Request to update a specific file system's information
 type UpdateFSRequest struct {
 	Acctnum string `protobuf:"bytes,1,opt,name=Acctnum,proto3" json:"Acctnum,omitempty"`
-	FSName  string `protobuf:"bytes,2,opt,name=FSName,proto3" json:"FSName,omitempty"`
+	FSid    string `protobuf:"bytes,2,opt,name=FSid,proto3" json:"FSid,omitempty"`
 	Token   string `protobuf:"bytes,3,opt,name=Token,proto3" json:"Token,omitempty"`
 	Filesys *ModFS `protobuf:"bytes,4,opt,name=Filesys" json:"Filesys,omitempty"`
 }
@@ -169,7 +171,7 @@ func (*UpdateFSResponse) ProtoMessage()    {}
 // Request grant an ip address access to a file system
 type GrantAddrFSRequest struct {
 	Acctnum string `protobuf:"bytes,1,opt,name=Acctnum,proto3" json:"Acctnum,omitempty"`
-	FSName  string `protobuf:"bytes,2,opt,name=FSName,proto3" json:"FSName,omitempty"`
+	FSid    string `protobuf:"bytes,2,opt,name=FSid,proto3" json:"FSid,omitempty"`
 	Token   string `protobuf:"bytes,3,opt,name=Token,proto3" json:"Token,omitempty"`
 	Addr    string `protobuf:"bytes,4,opt,name=Addr,proto3" json:"Addr,omitempty"`
 }
@@ -190,7 +192,7 @@ func (*GrantAddrFSResponse) ProtoMessage()    {}
 // Request revoke an ip address access to a file system
 type RevokeAddrFSRequest struct {
 	Acctnum string `protobuf:"bytes,1,opt,name=Acctnum,proto3" json:"Acctnum,omitempty"`
-	FSName  string `protobuf:"bytes,2,opt,name=FSName,proto3" json:"FSName,omitempty"`
+	FSid    string `protobuf:"bytes,2,opt,name=FSid,proto3" json:"FSid,omitempty"`
 	Token   string `protobuf:"bytes,3,opt,name=Token,proto3" json:"Token,omitempty"`
 	Addr    string `protobuf:"bytes,4,opt,name=Addr,proto3" json:"Addr,omitempty"`
 }
@@ -208,6 +210,24 @@ func (m *RevokeAddrFSResponse) Reset()         { *m = RevokeAddrFSResponse{} }
 func (m *RevokeAddrFSResponse) String() string { return proto.CompactTextString(m) }
 func (*RevokeAddrFSResponse) ProtoMessage()    {}
 
+// Request filesystem lookup
+type LookupAddrFSRequest struct {
+	FSid string `protobuf:"bytes,1,opt,name=FSid,proto3" json:"FSid,omitempty"`
+	Addr string `protobuf:"bytes,2,opt,name=Addr,proto3" json:"Addr,omitempty"`
+}
+
+func (m *LookupAddrFSRequest) Reset()         { *m = LookupAddrFSRequest{} }
+func (m *LookupAddrFSRequest) String() string { return proto.CompactTextString(m) }
+func (*LookupAddrFSRequest) ProtoMessage()    {}
+
+type LookupAddrFSResponse struct {
+	Status string `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+}
+
+func (m *LookupAddrFSResponse) Reset()         { *m = LookupAddrFSResponse{} }
+func (m *LookupAddrFSResponse) String() string { return proto.CompactTextString(m) }
+func (*LookupAddrFSResponse) ProtoMessage()    {}
+
 func init() {
 	proto.RegisterType((*ModFS)(nil), "filesystem.ModFS")
 	proto.RegisterType((*CreateFSRequest)(nil), "filesystem.CreateFSRequest")
@@ -224,6 +244,8 @@ func init() {
 	proto.RegisterType((*GrantAddrFSResponse)(nil), "filesystem.GrantAddrFSResponse")
 	proto.RegisterType((*RevokeAddrFSRequest)(nil), "filesystem.RevokeAddrFSRequest")
 	proto.RegisterType((*RevokeAddrFSResponse)(nil), "filesystem.RevokeAddrFSResponse")
+	proto.RegisterType((*LookupAddrFSRequest)(nil), "filesystem.LookupAddrFSRequest")
+	proto.RegisterType((*LookupAddrFSResponse)(nil), "filesystem.LookupAddrFSResponse")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -240,6 +262,7 @@ type FileSystemAPIClient interface {
 	UpdateFS(ctx context.Context, in *UpdateFSRequest, opts ...grpc.CallOption) (*UpdateFSResponse, error)
 	GrantAddrFS(ctx context.Context, in *GrantAddrFSRequest, opts ...grpc.CallOption) (*GrantAddrFSResponse, error)
 	RevokeAddrFS(ctx context.Context, in *RevokeAddrFSRequest, opts ...grpc.CallOption) (*RevokeAddrFSResponse, error)
+	LookupAddrFS(ctx context.Context, in *LookupAddrFSRequest, opts ...grpc.CallOption) (*LookupAddrFSResponse, error)
 }
 
 type fileSystemAPIClient struct {
@@ -313,6 +336,15 @@ func (c *fileSystemAPIClient) RevokeAddrFS(ctx context.Context, in *RevokeAddrFS
 	return out, nil
 }
 
+func (c *fileSystemAPIClient) LookupAddrFS(ctx context.Context, in *LookupAddrFSRequest, opts ...grpc.CallOption) (*LookupAddrFSResponse, error) {
+	out := new(LookupAddrFSResponse)
+	err := grpc.Invoke(ctx, "/filesystem.FileSystemAPI/LookupAddrFS", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for FileSystemAPI service
 
 type FileSystemAPIServer interface {
@@ -323,6 +355,7 @@ type FileSystemAPIServer interface {
 	UpdateFS(context.Context, *UpdateFSRequest) (*UpdateFSResponse, error)
 	GrantAddrFS(context.Context, *GrantAddrFSRequest) (*GrantAddrFSResponse, error)
 	RevokeAddrFS(context.Context, *RevokeAddrFSRequest) (*RevokeAddrFSResponse, error)
+	LookupAddrFS(context.Context, *LookupAddrFSRequest) (*LookupAddrFSResponse, error)
 }
 
 func RegisterFileSystemAPIServer(s *grpc.Server, srv FileSystemAPIServer) {
@@ -413,6 +446,18 @@ func _FileSystemAPI_RevokeAddrFS_Handler(srv interface{}, ctx context.Context, d
 	return out, nil
 }
 
+func _FileSystemAPI_LookupAddrFS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+	in := new(LookupAddrFSRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	out, err := srv.(FileSystemAPIServer).LookupAddrFS(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 var _FileSystemAPI_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "filesystem.FileSystemAPI",
 	HandlerType: (*FileSystemAPIServer)(nil),
@@ -444,6 +489,10 @@ var _FileSystemAPI_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RevokeAddrFS",
 			Handler:    _FileSystemAPI_RevokeAddrFS_Handler,
+		},
+		{
+			MethodName: "LookupAddrFS",
+			Handler:    _FileSystemAPI_LookupAddrFS_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{},
@@ -632,11 +681,11 @@ func (m *ShowFSRequest) MarshalTo(data []byte) (int, error) {
 		i = encodeVarintFilesystem(data, i, uint64(len(m.Acctnum)))
 		i += copy(data[i:], m.Acctnum)
 	}
-	if len(m.FSName) > 0 {
+	if len(m.FSid) > 0 {
 		data[i] = 0x12
 		i++
-		i = encodeVarintFilesystem(data, i, uint64(len(m.FSName)))
-		i += copy(data[i:], m.FSName)
+		i = encodeVarintFilesystem(data, i, uint64(len(m.FSid)))
+		i += copy(data[i:], m.FSid)
 	}
 	if len(m.Token) > 0 {
 		data[i] = 0x1a
@@ -698,11 +747,11 @@ func (m *DeleteFSRequest) MarshalTo(data []byte) (int, error) {
 		i = encodeVarintFilesystem(data, i, uint64(len(m.Acctnum)))
 		i += copy(data[i:], m.Acctnum)
 	}
-	if len(m.FSName) > 0 {
+	if len(m.FSid) > 0 {
 		data[i] = 0x12
 		i++
-		i = encodeVarintFilesystem(data, i, uint64(len(m.FSName)))
-		i += copy(data[i:], m.FSName)
+		i = encodeVarintFilesystem(data, i, uint64(len(m.FSid)))
+		i += copy(data[i:], m.FSid)
 	}
 	if len(m.Token) > 0 {
 		data[i] = 0x1a
@@ -764,11 +813,11 @@ func (m *UpdateFSRequest) MarshalTo(data []byte) (int, error) {
 		i = encodeVarintFilesystem(data, i, uint64(len(m.Acctnum)))
 		i += copy(data[i:], m.Acctnum)
 	}
-	if len(m.FSName) > 0 {
+	if len(m.FSid) > 0 {
 		data[i] = 0x12
 		i++
-		i = encodeVarintFilesystem(data, i, uint64(len(m.FSName)))
-		i += copy(data[i:], m.FSName)
+		i = encodeVarintFilesystem(data, i, uint64(len(m.FSid)))
+		i += copy(data[i:], m.FSid)
 	}
 	if len(m.Token) > 0 {
 		data[i] = 0x1a
@@ -840,11 +889,11 @@ func (m *GrantAddrFSRequest) MarshalTo(data []byte) (int, error) {
 		i = encodeVarintFilesystem(data, i, uint64(len(m.Acctnum)))
 		i += copy(data[i:], m.Acctnum)
 	}
-	if len(m.FSName) > 0 {
+	if len(m.FSid) > 0 {
 		data[i] = 0x12
 		i++
-		i = encodeVarintFilesystem(data, i, uint64(len(m.FSName)))
-		i += copy(data[i:], m.FSName)
+		i = encodeVarintFilesystem(data, i, uint64(len(m.FSid)))
+		i += copy(data[i:], m.FSid)
 	}
 	if len(m.Token) > 0 {
 		data[i] = 0x1a
@@ -906,11 +955,11 @@ func (m *RevokeAddrFSRequest) MarshalTo(data []byte) (int, error) {
 		i = encodeVarintFilesystem(data, i, uint64(len(m.Acctnum)))
 		i += copy(data[i:], m.Acctnum)
 	}
-	if len(m.FSName) > 0 {
+	if len(m.FSid) > 0 {
 		data[i] = 0x12
 		i++
-		i = encodeVarintFilesystem(data, i, uint64(len(m.FSName)))
-		i += copy(data[i:], m.FSName)
+		i = encodeVarintFilesystem(data, i, uint64(len(m.FSid)))
+		i += copy(data[i:], m.FSid)
 	}
 	if len(m.Token) > 0 {
 		data[i] = 0x1a
@@ -938,6 +987,60 @@ func (m *RevokeAddrFSResponse) Marshal() (data []byte, err error) {
 }
 
 func (m *RevokeAddrFSResponse) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Status) > 0 {
+		data[i] = 0xa
+		i++
+		i = encodeVarintFilesystem(data, i, uint64(len(m.Status)))
+		i += copy(data[i:], m.Status)
+	}
+	return i, nil
+}
+
+func (m *LookupAddrFSRequest) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *LookupAddrFSRequest) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.FSid) > 0 {
+		data[i] = 0xa
+		i++
+		i = encodeVarintFilesystem(data, i, uint64(len(m.FSid)))
+		i += copy(data[i:], m.FSid)
+	}
+	if len(m.Addr) > 0 {
+		data[i] = 0x12
+		i++
+		i = encodeVarintFilesystem(data, i, uint64(len(m.Addr)))
+		i += copy(data[i:], m.Addr)
+	}
+	return i, nil
+}
+
+func (m *LookupAddrFSResponse) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *LookupAddrFSResponse) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1063,7 +1166,7 @@ func (m *ShowFSRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
-	l = len(m.FSName)
+	l = len(m.FSid)
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
@@ -1095,7 +1198,7 @@ func (m *DeleteFSRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
-	l = len(m.FSName)
+	l = len(m.FSid)
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
@@ -1127,7 +1230,7 @@ func (m *UpdateFSRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
-	l = len(m.FSName)
+	l = len(m.FSid)
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
@@ -1163,7 +1266,7 @@ func (m *GrantAddrFSRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
-	l = len(m.FSName)
+	l = len(m.FSid)
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
@@ -1195,7 +1298,7 @@ func (m *RevokeAddrFSRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
-	l = len(m.FSName)
+	l = len(m.FSid)
 	if l > 0 {
 		n += 1 + l + sovFilesystem(uint64(l))
 	}
@@ -1211,6 +1314,30 @@ func (m *RevokeAddrFSRequest) Size() (n int) {
 }
 
 func (m *RevokeAddrFSResponse) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Status)
+	if l > 0 {
+		n += 1 + l + sovFilesystem(uint64(l))
+	}
+	return n
+}
+
+func (m *LookupAddrFSRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.FSid)
+	if l > 0 {
+		n += 1 + l + sovFilesystem(uint64(l))
+	}
+	l = len(m.Addr)
+	if l > 0 {
+		n += 1 + l + sovFilesystem(uint64(l))
+	}
+	return n
+}
+
+func (m *LookupAddrFSResponse) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Status)
@@ -1891,7 +2018,7 @@ func (m *ShowFSRequest) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FSName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field FSid", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1916,7 +2043,7 @@ func (m *ShowFSRequest) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FSName = string(data[iNdEx:postIndex])
+			m.FSid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2136,7 +2263,7 @@ func (m *DeleteFSRequest) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FSName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field FSid", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2161,7 +2288,7 @@ func (m *DeleteFSRequest) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FSName = string(data[iNdEx:postIndex])
+			m.FSid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2381,7 +2508,7 @@ func (m *UpdateFSRequest) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FSName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field FSid", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2406,7 +2533,7 @@ func (m *UpdateFSRequest) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FSName = string(data[iNdEx:postIndex])
+			m.FSid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2659,7 +2786,7 @@ func (m *GrantAddrFSRequest) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FSName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field FSid", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2684,7 +2811,7 @@ func (m *GrantAddrFSRequest) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FSName = string(data[iNdEx:postIndex])
+			m.FSid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2904,7 +3031,7 @@ func (m *RevokeAddrFSRequest) Unmarshal(data []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FSName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field FSid", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2929,7 +3056,7 @@ func (m *RevokeAddrFSRequest) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FSName = string(data[iNdEx:postIndex])
+			m.FSid = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -3037,6 +3164,193 @@ func (m *RevokeAddrFSResponse) Unmarshal(data []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: RevokeAddrFSResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFilesystem
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFilesystem
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Status = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFilesystem(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFilesystem
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LookupAddrFSRequest) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFilesystem
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LookupAddrFSRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LookupAddrFSRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FSid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFilesystem
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFilesystem
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FSid = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Addr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFilesystem
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFilesystem
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Addr = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFilesystem(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFilesystem
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LookupAddrFSResponse) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFilesystem
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LookupAddrFSResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LookupAddrFSResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
