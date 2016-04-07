@@ -111,7 +111,7 @@ func main() {
 				}
 				conn := setupWS(serverAddr)
 				ws := mb.NewFileSystemAPIClient(conn)
-				result, err := ws.CreateFS(context.Background(), &mb.CreateFSRequest{Acctnum: acctNum, FSName: c.String("Name"), Token: token})
+				result, err := ws.CreateFS(context.Background(), &mb.CreateFSRequest{Acctnum: acctNum, FSName: c.String("name"), Token: token})
 				if err != nil {
 					log.Fatalf("Bad Request: %v", err)
 					conn.Close()
