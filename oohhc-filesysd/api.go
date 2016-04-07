@@ -399,10 +399,10 @@ func (s *FileSystemAPIServer) GrantAddrFS(ctx context.Context, r *fb.GrantAddrFS
 		return nil, errf(codes.PermissionDenied, "%s", "Invalid Token")
 	}
 	// getFS data
-	fs := fmt.Sprintf("/acct/%s/fs/%s", r.Acctnum, r.FSid)
-	fsData, err = s.getFS(fs, r.Acctnum)
+	fs := fmt.Sprintf("/acct/%s/fs", r.Acctnum)
+	fsData, err = s.getFS(fs, r.FSid)
 	if err != nil {
-		log.Printf("Error %v on lookup for account %s", err, r.Acctnum)
+		log.Printf("Error %v on lookup for File system %s", err, r.Acctnum)
 		return nil, err
 	}
 	if fsData.Status == "active" {
