@@ -19,8 +19,8 @@ import (
 
 var (
 	usetls             = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
-	certFile           = flag.String("cert_file", "/etc/oort/server.crt", "The TLS cert file")
-	keyFile            = flag.String("key_file", "/etc/oort/server.key", "The TLS key file")
+	certFile           = flag.String("cert_file", "/var/lib/oohhc-acctd/server.crt", "The TLS cert file")
+	keyFile            = flag.String("key_file", "/var/lib/oohhc-acctd/server.key", "The TLS key file")
 	port               = flag.Int("port", 8449, "The acctd server port")
 	oortGroupHost      = flag.String("oortgrouphost", "127.0.0.1:6380", "host:port to use when connecting to oort group")
 	insecureSkipVerify = flag.Bool("skipverify", true, "don't verify cert")
@@ -28,17 +28,10 @@ var (
 	// Group Store Values
 	mutualtlsGS          = flag.Bool("mutualtlsGS", true, "Turn on MutualTLS for Group Store")
 	insecureSkipVerifyGS = flag.Bool("insecureSkipVerifyGS", false, "Don't verify cert for Group Store")
-	certFileGS           = flag.String("certfileGS", "/etc/oort/client.crt", "The client TLS cert file for the Group Store")
-	keyFileGS            = flag.String("keyFileGS", "/etc/oort/client.key", "The client TLS key file for the Group Store")
-	caFileGS             = flag.String("cafileGS", "/etc/oort/ca.pem", "The client CA file")
+	certFileGS           = flag.String("certfileGS", "/var/lib/oohhc-acctd/client.crt", "The client TLS cert file for the Group Store")
+	keyFileGS            = flag.String("keyFileGS", "/var/lib/oohhc-acctd/client.key", "The client TLS key file for the Group Store")
+	caFileGS             = flag.String("cafileGS", "/var/lib/oohhc-acctd/ca.pem", "The client CA file")
 )
-
-// FatalIf is just a lazy log/panic on error func
-func FatalIf(err error, msg string) {
-	if err != nil {
-		grpclog.Fatalf("%s: %v", msg, err)
-	}
-}
 
 func main() {
 	flag.Parse()
@@ -120,12 +113,18 @@ func main() {
 	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
-	FatalIf(err, "Failed to bind to port")
+	if err != nil {
+		fmt.Printf("Failed to bind to port: %v", err)
+		os.Exit(1)
+	}
 
 	var opts []grpc.ServerOption
 	if *usetls {
-		creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
-		FatalIf(err, "Couldn't load cert from file")
+		creds, cerr := credentials.NewServerTLSFromFile(*certFile, *keyFile)
+		if cerr != nil {
+			fmt.Printf("Couldn't load cert from file: %v", err)
+			os.Exit(1)
+		}
 		opts = []grpc.ServerOption{grpc.Creds(creds)}
 	}
 	s := grpc.NewServer(opts...)
