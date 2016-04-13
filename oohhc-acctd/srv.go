@@ -27,18 +27,13 @@ type AccountWS struct {
 // NewAccountWS function used to create a new admin grpc web service
 func NewAccountWS(superkey string, gaddr string, insecureSkipVerify bool, grpcOpts ...grpc.DialOption) (*AccountWS, error) {
 	// TODO: This all eventually needs to replaced with group rings
-	var err error
 	a := &AccountWS{
 		superKey: superkey,
 		gaddr:    gaddr,
 		gopts:    grpcOpts,
 	}
 	//a.gopts = append(a.gopts, grpc.WithTransportCredentials(a.gcreds))
-	a.gstore, err = api.NewGroupStore(a.gaddr, 10, a.gopts...)
-	if err != nil {
-		log.Fatalf("Unable to setup group store: %s", err.Error())
-		return nil, err
-	}
+	a.gstore = api.NewReplGroupStore(nil)
 	log.Println("creating a new group store...")
 	return a, nil
 }

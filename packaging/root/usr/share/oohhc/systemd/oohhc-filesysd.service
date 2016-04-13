@@ -16,7 +16,7 @@ ExecStart=/root/go/bin/oohhc-filesysd
 
 # it could take a long time to flush data to disk
 # so we set 0 to never timeout on TERM
-TimeoutStopSec=0
+TimeoutStopSec=60
 
 # if we crash, restart
 RestartSec=5
