@@ -19,17 +19,17 @@ import (
 
 var (
 	usetls             = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
-	certFile           = flag.String("cert_file", "/etc/oort/server.crt", "The TLS cert file")
-	keyFile            = flag.String("key_file", "/etc/oort/server.key", "The TLS key file")
+	certFile           = flag.String("cert_file", "/var/lib/filesysd/server.crt", "The TLS cert file")
+	keyFile            = flag.String("key_file", "/var/lib/filesysd/server.key", "The TLS key file")
 	port               = flag.Int("port", 8448, "The filesysd server port")
 	oortGroupHost      = flag.String("oortgrouphost", "127.0.0.1:6380", "host:port to use when connecting to oort group")
 	insecureSkipVerify = flag.Bool("skipverify", true, "don't verify cert")
 	// Group Store Values
 	mutualtlsGS          = flag.Bool("mutualtlsGS", true, "Turn on MutualTLS for Group Store")
 	insecureSkipVerifyGS = flag.Bool("insecureSkipVerifyGS", false, "Don't verify cert for Group Store")
-	certFileGS           = flag.String("certfileGS", "/etc/oort/client.crt", "The client TLS cert file for the Group Store")
-	keyFileGS            = flag.String("keyFileGS", "/etc/oort/client.key", "The client TLS key file for the Group Store")
-	caFileGS             = flag.String("cafileGS", "/etc/oort/ca.pem", "The client CA file")
+	certFileGS           = flag.String("certfileGS", "/var/lib/filesysd/client.crt", "The client TLS cert file for the Group Store")
+	keyFileGS            = flag.String("keyFileGS", "/var/lib/filesysd/client.key", "The client TLS key file for the Group Store")
+	caFileGS             = flag.String("cafileGS", "/var/lib/filesysd/ca.pem", "The client CA file")
 )
 
 // FatalIf is just a lazy log/panic on error func
