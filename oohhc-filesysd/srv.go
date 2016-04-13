@@ -25,18 +25,11 @@ type FileSystemWS struct {
 
 // NewFileSystemWS function used to create a new admin grpc web service
 func NewFileSystemWS(gaddr string, insecureSkipVerify bool, grpcOpts ...grpc.DialOption) (*FileSystemWS, error) {
-	// TODO: This all eventually needs to replaced with group rings
-
-	var err error
 	fs := &FileSystemWS{
 		gaddr: gaddr,
 		gopts: grpcOpts,
 	}
-	fs.gstore, err = api.NewGroupStore(fs.gaddr, 10, fs.gopts...)
-	if err != nil {
-		log.Fatalf("Unable to setup group store: %s", err.Error())
-		return nil, err
-	}
+	fs.gstore = api.NewReplGroupStore(nil)
 	log.Println("creating a new group store...")
 	return fs, nil
 }
