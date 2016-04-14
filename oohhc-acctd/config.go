@@ -27,9 +27,9 @@ func resolveConfig(c *config) *config {
 		cfg.path = "/var/lib/oohhc-acctd"
 	}
 	if env := os.Getenv("OOHHC_ACCT_SUPERUSER_KEY"); env != "" {
-		cfg.path = env
+		cfg.superUserKey = env
 	}
-	if cfg.path == "" {
+	if cfg.superUserKey == "" {
 		cfg.superUserKey = "123456789abcdef"
 	}
 
