@@ -37,13 +37,8 @@ func NewFileSystemWS(gaddr string, insecureSkipVerify bool, grpcOpts ...grpc.Dia
 // grpc Group Store functions
 // getGroupClient ...
 func (fsws *FileSystemWS) getGClient() {
-	var err error
-
 	log.Println("reconnecting to a new group store...")
-	fsws.gstore, err = api.NewGroupStore(fsws.gaddr, 10, fsws.gopts...)
-	if err != nil {
-		log.Fatalf("Unable to setup group store: %s", err.Error())
-	}
+	fsws.gstore = api.NewReplGroupStore(nil)
 }
 
 // lookupAccount ...

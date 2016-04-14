@@ -41,12 +41,8 @@ func NewAccountWS(superkey string, gaddr string, insecureSkipVerify bool, grpcOp
 // grpc Group Store functions
 // getGroupClient ...
 func (aws *AccountWS) getGClient() {
-	var err error
 	log.Println("reconnecting to a new group store...")
-	aws.gstore, err = api.NewGroupStore(aws.gaddr, 10, aws.gopts...)
-	if err != nil {
-		log.Fatalf("Unable to setup group store: %s", err.Error())
-	}
+	aws.gstore = api.NewReplGroupStore(nil)
 }
 
 // lookupAccount ...
