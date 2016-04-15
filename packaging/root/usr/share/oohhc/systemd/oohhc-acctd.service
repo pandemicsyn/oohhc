@@ -11,7 +11,7 @@ After=syslog.target network.target
 # http://0pointer.de/public/systemd-man/systemd.exec.html
 [Service]
 Type=simple
-EnvironmentFile=/etc/default/oohhc-acctd
+EnvironmentFile=-/etc/default/oohhc-acctd
 ExecStart=/root/go/bin/oohhc-acctd
 
 # it could take a long time to flush data to disk
