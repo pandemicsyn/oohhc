@@ -31,7 +31,7 @@ func resolveConfig(c *config) *config {
 		}
 	}
 	if cfg.port == 0 {
-		cfg.port = 8449
+		cfg.port = 8448
 	}
 	if env := os.Getenv("OOHHC_FILESYS_INSECURE_SKIP_VERIFY"); env == "true" {
 		cfg.insecureSkipVerify = true
