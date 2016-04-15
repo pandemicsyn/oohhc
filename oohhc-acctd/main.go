@@ -24,6 +24,8 @@ func FatalIf(err error, msg string) {
 		grpclog.Fatalf("%s: %v", msg, err)
 	}
 }
+
+// main is the real deal
 func main() {
 
 	cfg := resolveConfig(nil)
