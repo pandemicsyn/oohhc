@@ -58,7 +58,6 @@ func main() {
 	if clientID != "" {
 		clientID += "/oohhc-acctd"
 	}
-	grpclog.Fatalln(cfg.oortGroupSyndicate)
 	gstore := api.NewReplGroupStore(&api.ReplGroupStoreConfig{
 		AddressIndex:       2,
 		GRPCOpts:           []grpc.DialOption{oortDialOpts},
