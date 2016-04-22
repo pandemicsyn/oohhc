@@ -35,7 +35,15 @@ func main() {
 	FatalIf(err, "Couldn't load cert from file")
 	opts = []grpc.ServerOption{grpc.Creds(creds)}
 	s := grpc.NewServer(opts...)
-	copt, err := ftls.NewGRPCClientDialOpt(&ftls.Config{
+	ringDialOpts, err := ftls.NewGRPCClientDialOpt(&ftls.Config{
+		MutualTLS:          false,
+		InsecureSkipVerify: cfg.insecureSkipVerify,
+		CAFile:             path.Join(cfg.path, "ca.pem"),
+	})
+	if err != nil {
+		grpclog.Fatalln("Cannot setup tls config for synd client:", err)
+	}
+	oortDialOpts, err := ftls.NewGRPCClientDialOpt(&ftls.Config{
 		MutualTLS:          !cfg.skipMutualTLS,
 		InsecureSkipVerify: cfg.insecureSkipVerify,
 		CertFile:           path.Join(cfg.path, "client.crt"),
@@ -43,7 +51,7 @@ func main() {
 		CAFile:             path.Join(cfg.path, "ca.pem"),
 	})
 	if err != nil {
-		grpclog.Fatalln("Cannot setup tls config:", err)
+		grpclog.Fatalln("Cannot setup tls config for oort client:", err)
 	}
 
 	clientID, _ := os.Hostname()
@@ -53,10 +61,10 @@ func main() {
 
 	gstore := api.NewReplGroupStore(&api.ReplGroupStoreConfig{
 		AddressIndex:       2,
-		GRPCOpts:           []grpc.DialOption{copt},
+		GRPCOpts:           []grpc.DialOption{oortDialOpts},
 		RingServer:         cfg.oortGroupSyndicate,
 		RingCachePath:      path.Join(cfg.path, "ring/groupstore.ring"),
-		RingServerGRPCOpts: []grpc.DialOption{copt},
+		RingServerGRPCOpts: []grpc.DialOption{ringDialOpts},
 		RingClientID:       clientID,
 	})
 	if gerr := gstore.Startup(context.Background()); gerr != nil {
