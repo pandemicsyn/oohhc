@@ -6,13 +6,13 @@ o͝ohēk
 A simple set of management servers and an admin client for metadata that uses the group store for persistent storage.
 
 
-## oohhc-acctd
+## oohhc-acctd   SYSTEM DEPRECATED  
 The account data will be stored in the group store using the following format:
 
 ```
    Key:               /acct
    ChildKey:          [uuid]
-   Value:   { 
+   Value:   {
                "id": [uuid],                 # same value as the ChildKey
                "name": "[string]",           
                "token": [uuid],     
@@ -56,7 +56,7 @@ filesystem
 ```
    Key:               /acct/[uuid]/fs
    ChildKey:          [uuid]
-   Value:   { 
+   Value:   {
                "id": [uuid],                 # same value as the ChildKey
                "name": "[string]",           
                "sizeinbytes": [int64],     
@@ -70,7 +70,7 @@ ipaddress
 ```
    Key:               /acct/[uuid]/fs/[uuid]
    ChildKey:          [uuid]
-   Value:   { 
+   Value:   {
                "id": [uuid],                 # same value as the ChildKey
                "addr": "[string]",           
                "status": "[string]",         # active, deleted, suspended
