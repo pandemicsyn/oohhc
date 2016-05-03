@@ -1,0 +1,89 @@
+
+
+TODO:  create token entries in the group store for each account
+TODO:  since there are basically a "set" of entries that make up a
+        file system, I need to come up with a way to clean up any orphaned
+        entries that may occur.
+
+Special Note:
+-------------
+1.  Not going to change the account blob since it will go away
+    once we interface with RAX identity
+2.  Since tokens are uuids, we can create a lookup entry for it and bypass the
+    need for the account in command operations.
+
+
+===================
+CREATE A FILESYSTEM
+===================
+read            /token                            [token]               token, account uuid
+read            /acct                             [account id]          account id, name, token, status, created, deleted
+
+write           /fs                               [file system uuid]    fs uuid, account uuid
+write           /acct/[account id]                [file system uuid]    fs uuid, account uuid
+write           /fs/[file system uuid]            [account uuid]        attribute, name, fs uuid
+write           /fs/[file system uuid]            name                  attribute, name, fs uuid
+write           /fs/[file system uuid]            active                attribute, name, fs uuid
+
+
+================
+GRANT IP ADDRESS
+================
+read            /token                            [token]               token, account uuid
+read            /acct                             [account id]          account id, name, token, status, created, deleted
+
+write           /fs/[file system uuid]/addr       [ip address]          ip address, filesystem uuid
+
+
+=================
+REVOKE IP ADDRESS
+=================
+read            /token                            [token]               token, account uuid
+read            /acct                             [account id]          account id, name, token, status, created, deleted
+
+delete          /fs/[file system uuid]/addr       [ip address]          ip address, filesystem uuid
+
+
+====================
+DELETE A FILE SYSTEM
+====================
+read            /token                            [token]               token, account uuid
+read            /acct                             [account id]          account id, name, token, status, created, deleted
+
+lookup group    /fs/[file system uuid]/addr       (loop thru list and delete each entry)
+delete          /fs/[file system uuid]/addr       [ip address]
+
+delete          /fs                               [file system uuid]
+delete          /acct/[account uuid]              [file system uuid]
+
+lookup group    /fs/[file system uuid]            (loop thru list and delete each entry)
+delete          /fs/[file system uuid]            [child key]
+
+
+
+=================
+SHOW A FILESYSTEM
+=================
+read            /token                            [token]               token, account uuid
+read            /acct                             [account id]          account id, name, token, status, created, deleted
+
+read group      /fs/[file system uuid]            (loop thru list and display each entry)
+read group      /fs/[file system uuid]/addr       (loop thru list and display each ip address entry)
+
+
+
+====================================
+LIST ALL FILE SYSTEMS FOR AN ACCOUNT
+====================================
+read            /token                            [token]               token, account uuid
+read            /acct                             [account id]          account id, name, token, status, created, deleted
+
+read group      /acct/[account uuid]              (loop thru list and do a "SHOW" for each entry)
+
+
+
+=================================
+VERIFY IP ADDRESS FOR FILE SYSTEM
+=================================
+
+read          /fs/[file system uuid]/addr         [ip address]          ip address, file system uuid
